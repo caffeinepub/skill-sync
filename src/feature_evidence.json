@@ -1,0 +1,180 @@
+{
+  "kind": "feature_evidence_report",
+  "features": [
+    {
+      "featureId": "feature-create-a-responsive-app-shell-with-a-modern-navbar-that-includes-the-skill-sync-logo-primary-navigation-home-skill-match-dashboard-and-login-logout-entry-points",
+      "featureTitle": "Create a responsive app shell with a modern navbar that includes the “Skill Sync” logo, primary navigation (Home, Skill Match, Dashboard), and Login/Logout entry points.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/auth/AuthButtons.tsx",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/components/layout/Navbar.tsx",
+        "frontend/src/pages/LoginPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-implement-a-home-page-with-hero-heading-learn-teach-earn-grow-together-a-short-subheading-explaining-the-peer-to-peer-skill-exchange-concept-cta-buttons-start-learning-start-teaching-a-features-section-live-classes-credit-system-smart-matching-doubt-solving-a-3-step-how-it-works-section-with-icons-a-testimonials-section-and-a-footer-with-social-links-and-contact-info",
+      "featureTitle": "Implement a Home page with: hero heading “Learn. Teach. Earn. Grow Together.”, a short subheading explaining the peer-to-peer skill exchange concept, CTA buttons (“Start Learning”, “Start Teaching”), a Features section (Live Classes, Credit System, Smart Matching, Doubt Solving), a 3-step “How It Works” section with icons, a Testimonials section, and a Footer with social links and contact info.",
+      "files": [
+        "frontend/src/components/layout/Footer.tsx",
+        "frontend/src/components/marketing/FeaturesSection.tsx",
+        "frontend/src/components/marketing/HowItWorksSection.tsx",
+        "frontend/src/pages/HomePage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-2"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-login-and-signup-ui-flows-using-internet-identity-for-authentication-treat-signup-as-first-time-profile-setup-after-a-successful-internet-identity-login-collect-name-and-skills",
+      "featureTitle": "Create Login and Signup UI flows using Internet Identity for authentication; treat “Signup” as first-time profile setup after a successful Internet Identity login (collect name and skills).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/auth/RequireAuth.tsx",
+        "frontend/src/components/auth/RequireProfile.tsx",
+        "frontend/src/pages/SignupProfilePage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-3"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-dashboard-page-post-login-with-profile-section-name-skills-credits-book-a-session-button-upcoming-sessions-list-earned-credits-display-and-feedback-ratings-summary-1-5-stars",
+      "featureTitle": "Create a Dashboard page (post-login) with: profile section (Name, Skills, Credits), “Book a Session” button, upcoming sessions list, earned credits display, and feedback ratings summary (1–5 stars).",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/feedback/StarRating.tsx",
+        "frontend/src/hooks/useSessionsLocal.ts",
+        "frontend/src/pages/DashboardPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-skill-match-page-with-a-search-bar-a-set-of-skill-categories-including-coding-design-music-language-and-match-cards-that-show-rating-and-credit-cost-plus-an-action-to-request-book-a-session",
+      "featureTitle": "Create a Skill Match page with a search bar, a set of skill categories (including Coding, Design, Music, Language), and match cards that show rating and credit cost, plus an action to request/book a session.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/match/MatchCard.tsx",
+        "frontend/src/pages/SkillMatchPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-5"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-create-a-live-class-page-ui-with-a-video-call-placeholder-area-a-session-duration-timer-a-feedback-submission-form-1-5-stars-comment-and-a-credit-calculation-display-based-on-session-duration-and-feedback-rating",
+      "featureTitle": "Create a Live Class page UI with: a video call placeholder area, a session duration timer, a feedback submission form (1–5 stars + comment), and a credit calculation display based on session duration and feedback rating.",
+      "files": [
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useSessionTimer.ts",
+        "frontend/src/pages/LiveClassPage.tsx",
+        "frontend/src/utils/creditCalculation.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-6"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-apply-a-clean-youth-focused-visual-design-across-all-pages-with-a-soft-blue-purple-gradient-background-card-based-layout-modern-typography-and-smooth-hover-transition-animations-for-buttons-cards-and-navigation",
+      "featureTitle": "Apply a clean, youth-focused visual design across all pages with a soft blue+purple gradient background, card-based layout, modern typography, and smooth hover/transition animations for buttons, cards, and navigation.",
+      "files": [
+        "frontend/index.css",
+        "frontend/src/components/layout/AppShell.tsx",
+        "frontend/src/components/layout/Navbar.tsx",
+        "frontend/src/index.css"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-add-a-dark-mode-option-with-a-theme-toggle-that-persists-the-user-s-preference-and-updates-the-gradient-background-and-component-colors-appropriately",
+      "featureTitle": "Add a dark mode option with a theme toggle that persists the user’s preference and updates the gradient/background and component colors appropriately.",
+      "files": [
+        "frontend/index.css",
+        "frontend/src/components/layout/Navbar.tsx",
+        "frontend/src/components/theme/ThemeToggle.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-9"
+      ],
+      "confidence": "high"
+    }
+  ]
+}

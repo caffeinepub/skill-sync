@@ -1,0 +1,151 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Build a modern, responsive website for “Skill Sync”, a student peer-to-peer skill exchange platform with core pages (Home, Dashboard, Live Class, Skill Match) and UI features like auth screens, credit/feedback displays, animations, and optional dark mode.",
+  "architectural_notes": [
+    "Frontend-only site requested using HTML/CSS/JavaScript (React optional); backend functionality not specified, so auth/credits/feedback are primarily UI/display."
+  ],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Modern minimal wordmark logo reading “Skill Sync” on transparent background (skill-sync-logo.dim_512x512.png)\n- Abstract soft gradient background with subtle shapes, blue-to-purple, no text (skillsync-bg.dim_1920x1080.png)\n- Set of 4 minimal line icons (live class, credits, matching, doubt solving) in a consistent style (skillsync-icons-sprite.dim_1024x256.png)",
+  "existing_features": [
+    {
+      "id": "feature-create-a-responsive-app-shell-with-a-modern-navbar-that-includes-the-skill-sync-logo-primary-navigation-home-skill-match-dashboard-and-login-logout-entry-points",
+      "title": "Create a responsive app shell with a modern navbar that includes the “Skill Sync” logo, primary navigation (Home, Skill Match, Dashboard), and Login/Logout entry points.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-home-page-with-hero-heading-learn-teach-earn-grow-together-a-short-subheading-explaining-the-peer-to-peer-skill-exchange-concept-cta-buttons-start-learning-start-teaching-a-features-section-live-classes-credit-system-smart-matching-doubt-solving-a-3-step-how-it-works-section-with-icons-a-testimonials-section-and-a-footer-with-social-links-and-contact-info",
+      "title": "Implement a Home page with: hero heading “Learn. Teach. Earn. Grow Together.”, a short subheading explaining the peer-to-peer skill exchange concept, CTA buttons (“Start Learning”, “Start Teaching”), a Features section (Live Classes, Credit System, Smart Matching, Doubt Solving), a 3-step “How It Works” section with icons, a Testimonials section, and a Footer with social links and contact info.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-login-and-signup-ui-flows-using-internet-identity-for-authentication-treat-signup-as-first-time-profile-setup-after-a-successful-internet-identity-login-collect-name-and-skills",
+      "title": "Create Login and Signup UI flows using Internet Identity for authentication; treat “Signup” as first-time profile setup after a successful Internet Identity login (collect name and skills).",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-dashboard-page-post-login-with-profile-section-name-skills-credits-book-a-session-button-upcoming-sessions-list-earned-credits-display-and-feedback-ratings-summary-1-5-stars",
+      "title": "Create a Dashboard page (post-login) with: profile section (Name, Skills, Credits), “Book a Session” button, upcoming sessions list, earned credits display, and feedback ratings summary (1–5 stars).",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-skill-match-page-with-a-search-bar-a-set-of-skill-categories-including-coding-design-music-language-and-match-cards-that-show-rating-and-credit-cost-plus-an-action-to-request-book-a-session",
+      "title": "Create a Skill Match page with a search bar, a set of skill categories (including Coding, Design, Music, Language), and match cards that show rating and credit cost, plus an action to request/book a session.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-live-class-page-ui-with-a-video-call-placeholder-area-a-session-duration-timer-a-feedback-submission-form-1-5-stars-comment-and-a-credit-calculation-display-based-on-session-duration-and-feedback-rating",
+      "title": "Create a Live Class page UI with: a video call placeholder area, a session duration timer, a feedback submission form (1–5 stars + comment), and a credit calculation display based on session duration and feedback rating.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-clean-youth-focused-visual-design-across-all-pages-with-a-soft-blue-purple-gradient-background-card-based-layout-modern-typography-and-smooth-hover-transition-animations-for-buttons-cards-and-navigation",
+      "title": "Apply a clean, youth-focused visual design across all pages with a soft blue+purple gradient background, card-based layout, modern typography, and smooth hover/transition animations for buttons, cards, and navigation.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-dark-mode-option-with-a-theme-toggle-that-persists-the-user-s-preference-and-updates-the-gradient-background-and-component-colors-appropriately",
+      "title": "Add a dark mode option with a theme toggle that persists the user’s preference and updates the gradient/background and component colors appropriately.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Create Home page (hero, CTA buttons, features, how-it-works, testimonials, footer with social/contact) with modern youth-focused gradient design",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Create Dashboard page UI (profile with skills/credits, book session button, upcoming sessions, earned credits, feedback ratings)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Create Live Class page UI (video call placeholder, session timer, feedback submission form, credit calculation display)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Create Skill Match page UI (search, categories, match cards with ratings and credit cost)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Add Login / Signup UI screens (no backend specified)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Implement global responsive layout and styling (mobile/tablet/desktop) with clean card-based components",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Add modern navbar with logo and site navigation",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Add smooth animations, hover effects, and modern UI interactions",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Add dark mode option (theme toggle)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Display credit points system and 1–5 star feedback rating UI across relevant pages",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-17",
+      "summary": "Implement backend data models and API endpoints in the single Motoko actor to support: user profile (name, skills, credits), sessions (create/list/update status), feedback (store rating/comment linked to a session), and a deterministic credit calculation function based on duration and rating.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Skill Sync",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

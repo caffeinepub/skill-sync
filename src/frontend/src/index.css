@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --radius: 0.75rem;
+    
+    /* Light mode - Blue & Purple theme */
+    --background: 0.98 0.01 250;
+    --foreground: 0.15 0.02 250;
+    --card: 1 0 0;
+    --card-foreground: 0.15 0.02 250;
+    --popover: 1 0 0;
+    --popover-foreground: 0.15 0.02 250;
+    --primary: 0.55 0.18 265;
+    --primary-foreground: 1 0 0;
+    --secondary: 0.95 0.02 265;
+    --secondary-foreground: 0.15 0.02 250;
+    --muted: 0.96 0.01 250;
+    --muted-foreground: 0.50 0.02 250;
+    --accent: 0.94 0.03 265;
+    --accent-foreground: 0.15 0.02 250;
+    --destructive: 0.577 0.245 27.325;
+    --destructive-foreground: 1 0 0;
+    --border: 0.90 0.01 250;
+    --input: 0.90 0.01 250;
+    --ring: 0.55 0.18 265;
+    --chart-1: 0.60 0.18 250;
+    --chart-2: 0.55 0.18 280;
+    --chart-3: 0.65 0.15 240;
+    --chart-4: 0.70 0.12 260;
+    --chart-5: 0.50 0.20 270;
+  }
+
+  .dark {
+    /* Dark mode - Blue & Purple theme */
+    --background: 0.12 0.02 265;
+    --foreground: 0.95 0.01 250;
+    --card: 0.18 0.03 265;
+    --card-foreground: 0.95 0.01 250;
+    --popover: 0.15 0.03 265;
+    --popover-foreground: 0.95 0.01 250;
+    --primary: 0.65 0.20 265;
+    --primary-foreground: 0.98 0.01 250;
+    --secondary: 0.25 0.04 265;
+    --secondary-foreground: 0.95 0.01 250;
+    --muted: 0.22 0.03 265;
+    --muted-foreground: 0.65 0.02 250;
+    --accent: 0.30 0.05 270;
+    --accent-foreground: 0.95 0.01 250;
+    --destructive: 0.60 0.22 25;
+    --destructive-foreground: 0.98 0.01 250;
+    --border: 0.25 0.03 265;
+    --input: 0.25 0.03 265;
+    --ring: 0.65 0.20 265;
+    --chart-1: 0.55 0.20 250;
+    --chart-2: 0.60 0.22 280;
+    --chart-3: 0.50 0.18 240;
+    --chart-4: 0.65 0.15 260;
+    --chart-5: 0.45 0.25 270;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+}
+
+@layer utilities {
+  .gradient-bg {
+    @apply bg-gradient-to-br from-blue-50 via-purple-50 to-blue-100 dark:from-gray-900 dark:via-purple-950 dark:to-blue-950;
+  }
+
+  .card-surface {
+    @apply bg-card text-card-foreground rounded-lg border shadow-sm;
+  }
+
+  .smooth-transition {
+    @apply transition-all duration-300 ease-in-out;
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-14T22:00:34.579Z",
+  "summary": "Diff adds core frontend scaffolding (TanStack Router routes, AppShell with navbar/footer, auth guards, theme toggle with next-themes, styling tokens) plus several feature components (match cards, star rating) and a Motoko backend actor with initial profile/session/timer structures (truncated). Some non-requested items also appear (Caffeine.ai attribution link, admin-token URL parameter initialization, localStorage-based sessions). Because many added files are omitted/truncated, several requirements (Home/Dashboard/Skill Match/Live Class page implementations and full backend API surface) cannot be conclusively verified from the provided diff summary.",
+  "missing_requirements": [
+    {
+      "id": "REQ-6",
+      "requirement": "Persist feedback submission to backend for the session and show credit calculation display based on session duration and feedback rating.",
+      "reason": "The diff shows a frontend feedback star component and hooks calling submitFeedback/startSession, and a backend with session timers, but the backend submitFeedback implementation is truncated and no LiveClassPage implementation is visible in the diff summary. Therefore persistence and credit calculation UI update cannot be confirmed from evidence provided.",
+      "evidence": [
+        "backend/main.mo (truncated at submitFeedback)",
+        "frontend/src/App.tsx",
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/components/feedback/StarRating.tsx"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Backend exposes methods to: get/create/update current user profile; list upcoming sessions; create a session request/booking; submit feedback for a session; compute credits earned/spent; enforce only authenticated principal can mutate own data.",
+      "reason": "Some profile methods and startSession exist, but the backend file is truncated before showing submitFeedback and any credit calculation function, plus there is no visible evidence of listUpcomingSessions, create session request/booking beyond startSession, update status endpoints, or a deterministic computeCredits API.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "frontend/src/hooks/useQueries.ts (only getCallerUserProfile/createUserProfile/startSession/submitFeedback are referenced)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Footer includes a promotional attribution link to caffeine.ai with UTM parameters derived from window.location.hostname.",
+      "reason": "BuildRequest only requires footer with social links and contact info; no attribution/marketing link requirement is stated.",
+      "evidence": [
+        "frontend/src/components/layout/Footer.tsx"
+      ]
+    },
+    {
+      "description": "Admin-token based access-control initialization via secret URL parameter (caffeineAdminToken) when creating the actor.",
+      "reason": "BuildRequest specifies Internet Identity auth only and does not request an admin secret token passed via URL for access-control initialization.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts"
+      ]
+    },
+    {
+      "description": "LocalStorage-based per-principal session storage helper (useLocalSessions) that stores sessions client-side.",
+      "reason": "BuildRequest expects sessions/upcoming sessions supported by backend APIs; client-only session persistence is not requested and may bypass backend model expectations.",
+      "evidence": [
+        "frontend/src/hooks/useSessionsLocal.ts"
+      ]
+    },
+    {
+      "description": "Backend auto-completes sessions after a fixed 60-second timer.",
+      "reason": "BuildRequest asks for a start/stop timer controlled from the Live Class page and credit calculation based on duration; a hard-coded 60-second backend timer completion behavior is not requested.",
+      "evidence": [
+        "backend/main.mo"
+      ]
+    }
+  ],
+  "confidence": 0.62,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/auth/AuthButtons.tsx",
+    "frontend/src/components/auth/RequireAuth.tsx",
+    "frontend/src/components/auth/RequireProfile.tsx",
+    "frontend/src/components/feedback/StarRating.tsx",
+    "frontend/src/components/layout/AppShell.tsx",
+    "frontend/src/components/layout/Footer.tsx",
+    "frontend/src/components/layout/Navbar.tsx",
+    "frontend/src/components/marketing/FeaturesSection.tsx",
+    "frontend/src/components/marketing/HowItWorksSection.tsx",
+    "frontend/src/components/match/MatchCard.tsx",
+    "frontend/src/components/theme/ThemeToggle.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/hooks/useSessionTimer.ts",
+    "frontend/src/hooks/useSessionsLocal.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/HomePage.tsx",
+    "frontend/src/pages/LiveClassPage.tsx",
+    "frontend/src/pages/LoginPage.tsx",
+    "frontend/src/pages/SignupProfilePage.tsx",
+    "frontend/src/pages/SkillMatchPage.tsx",
+    "frontend/src/utils/creditCalculation.ts",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}
