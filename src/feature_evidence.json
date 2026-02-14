@@ -2,12 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-replace-the-live-class-page-s-video-placeholder-with-a-working-1-1-in-browser-video-call-experience-that-can-connect-two-authenticated-users",
-      "featureTitle": "Replace the Live Class page’s video placeholder with a working 1:1 in-browser video call experience that can connect two authenticated users.",
+      "featureId": "feature-add-react-query-hooks-for-scheduled-session-operations-and-update-the-dashboard-to-use-backend-sourced-upcoming-sessions-instead-of-localstorage-sessions",
+      "featureTitle": "Add React Query hooks for scheduled session operations and update the Dashboard to use backend-sourced upcoming sessions instead of localStorage sessions.",
       "files": [
-        "frontend/src/components/liveclass/VideoCallPanel.tsx",
-        "frontend/src/hooks/useWebRTCPeer.ts",
-        "frontend/src/pages/LiveClassPage.tsx"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/DashboardPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -19,16 +18,17 @@
         "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-10"
+        "REQ-15"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-a-simple-shareable-join-link-flow-so-two-people-can-reliably-meet-in-the-same-1-1-call-without-needing-user-search",
-      "featureTitle": "Add a simple, shareable “join link” flow so two people can reliably meet in the same 1:1 call without needing user search.",
+      "featureId": "feature-add-a-create-session-ui-flow-that-lets-a-logged-in-user-schedule-a-session-title-skill-date-time-duration-and-produces-a-shareable-join-link-for-another-user",
+      "featureTitle": "Add a “Create Session” UI flow that lets a logged-in user schedule a session (title, skill, date, time, duration) and produces a shareable join link for another user.",
       "files": [
         "frontend/src/components/liveclass/JoinLinkBox.tsx",
-        "frontend/src/pages/LiveClassPage.tsx"
+        "frontend/src/components/sessions/CreateSessionDialog.tsx",
+        "frontend/src/pages/DashboardPage.tsx"
       ],
       "components": [
         "authorization@4.0.0",
@@ -40,14 +40,37 @@
         "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-12"
+        "REQ-16"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-integrate-frontend-data-flow-for-signaling-using-the-existing-actor-react-query-patterns-without-modifying-immutable-hook-files-and-ensure-the-call-connection-state-is-resilient-to-refreshes-navigation",
-      "featureTitle": "Integrate frontend data-flow for signaling using the existing actor/React Query patterns, without modifying immutable hook files, and ensure the call connection state is resilient to refreshes/navigation.",
+      "featureId": "feature-implement-a-timed-join-session-experience-the-join-button-is-disabled-until-the-allowed-join-window-e-g-at-near-start-time-and-joining-routes-the-user-into-the-correct-live-class-call-room-for-that-scheduled-session",
+      "featureTitle": "Implement a timed “Join Session” experience: the Join button is disabled until the allowed join window (e.g., at/near start time), and joining routes the user into the correct Live Class call room for that scheduled session.",
       "files": [
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/LiveClassPage.tsx",
+        "frontend/src/utils/scheduledSessionTime.ts"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "camera@1.0.0"
+      ],
+      "testIds": [
+        "REQ-17"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-connect-scheduled-sessions-to-the-existing-webrtc-signaling-call-flow-so-that-calls-are-created-between-two-distinct-authenticated-users-not-self-calls-when-a-scheduled-session-starts-joined",
+      "featureTitle": "Connect scheduled sessions to the existing WebRTC signaling/call flow so that calls are created between two distinct authenticated users (not self-calls) when a scheduled session starts/joined.",
+      "files": [
+        "frontend/src/components/liveclass/VideoCallPanel.tsx",
         "frontend/src/hooks/useCallSignaling.ts",
         "frontend/src/pages/LiveClassPage.tsx"
       ],
@@ -61,7 +84,29 @@
         "camera@1.0.0"
       ],
       "testIds": [
-        "REQ-13"
+        "REQ-18"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-update-the-skill-match-booking-flow-to-schedule-real-backend-sessions-instead-of-only-adding-mock-local-sessions-while-keeping-user-facing-text-in-english-and-preserving-existing-navigation-patterns",
+      "featureTitle": "Update the Skill Match booking flow to schedule real backend sessions (instead of only adding mock local sessions), while keeping user-facing text in English and preserving existing navigation patterns.",
+      "files": [
+        "frontend/src/components/sessions/BookSessionDialog.tsx",
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/pages/SkillMatchPage.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0",
+        "camera@1.0.0"
+      ],
+      "testIds": [
+        "REQ-19"
       ],
       "confidence": "high"
     }

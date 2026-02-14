@@ -1,10 +1,11 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 5,
+  "projectStateVersion": 7,
   "summary": "Build a modern, responsive website for “Skill Sync”, a student peer-to-peer skill exchange platform with core pages (Home, Dashboard, Live Class, Skill Match) and UI features like auth screens, credit/feedback displays, animations, optional dark mode, and support for real two-person video calls (not just a placeholder).",
   "architectural_notes": [
     "Frontend-only site requested using HTML/CSS/JavaScript (React optional); backend functionality not specified, so auth/credits/feedback are primarily UI/display.",
-    "Real 1:1 video calling will require WebRTC (or a video SDK) plus signaling/room coordination; this goes beyond the current UI-only placeholder."
+    "Real 1:1 video calling will require WebRTC (or a video SDK) plus signaling/room coordination; this goes beyond the current UI-only placeholder.",
+    "Scheduling/join-at-time requires session records to include start timestamp (and likely duration/timezone handling) plus UI gating logic to enable/disable Join and route into the correct call room at session time."
   ],
   "known_issues": [],
   "isFixRequest": false,
@@ -96,6 +97,46 @@
         "REQ-13"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-for-scheduled-session-operations-and-update-the-dashboard-to-use-backend-sourced-upcoming-sessions-instead-of-localstorage-sessions",
+      "title": "Add React Query hooks for scheduled session operations and update the Dashboard to use backend-sourced upcoming sessions instead of localStorage sessions.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-create-session-ui-flow-that-lets-a-logged-in-user-schedule-a-session-title-skill-date-time-duration-and-produces-a-shareable-join-link-for-another-user",
+      "title": "Add a “Create Session” UI flow that lets a logged-in user schedule a session (title, skill, date, time, duration) and produces a shareable join link for another user.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-implement-a-timed-join-session-experience-the-join-button-is-disabled-until-the-allowed-join-window-e-g-at-near-start-time-and-joining-routes-the-user-into-the-correct-live-class-call-room-for-that-scheduled-session",
+      "title": "Implement a timed “Join Session” experience: the Join button is disabled until the allowed join window (e.g., at/near start time), and joining routes the user into the correct Live Class call room for that scheduled session.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-connect-scheduled-sessions-to-the-existing-webrtc-signaling-call-flow-so-that-calls-are-created-between-two-distinct-authenticated-users-not-self-calls-when-a-scheduled-session-starts-joined",
+      "title": "Connect scheduled sessions to the existing WebRTC signaling/call flow so that calls are created between two distinct authenticated users (not self-calls) when a scheduled session starts/joined.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-skill-match-booking-flow-to-schedule-real-backend-sessions-instead-of-only-adding-mock-local-sessions-while-keeping-user-facing-text-in-english-and-preserving-existing-navigation-patterns",
+      "title": "Update the Skill Match booking flow to schedule real backend sessions (instead of only adding mock local sessions), while keeping user-facing text in English and preserving existing navigation patterns.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -178,6 +219,20 @@
       "summary": "Implement 1:1 call signaling in the Motoko backend actor to allow two peers to exchange WebRTC offers/answers and ICE candidates via the canister (no third-party video SDK).",
       "reqIds": [
         "REQ-11"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-21",
+      "summary": "Add scheduled session creation + timed join flow (create session with date/time/duration/skill; store schedule; show upcoming sessions; enable Join only when start time arrives; auto-route both users into the correct 1:1 call room)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-22",
+      "summary": "Implement backend support for scheduled sessions (future date/time) that can be created by a host and joined by another authenticated user, including persistent storage and query endpoints for listing and retrieving sessions.",
+      "reqIds": [
+        "REQ-14"
       ],
       "status": "pending"
     }

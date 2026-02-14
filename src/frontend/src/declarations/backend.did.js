@@ -27,6 +27,15 @@ export const Call = IDL.Record({
   'callerIceCandidates' : IDL.Vec(IDL.Text),
   'calleeIceCandidates' : IDL.Vec(IDL.Text),
 });
+export const ScheduledSession = IDL.Record({
+  'id' : IDL.Nat,
+  'duration' : IDL.Nat,
+  'scheduledTime' : IDL.Int,
+  'host' : IDL.Principal,
+  'isActive' : IDL.Bool,
+  'participant' : IDL.Opt(IDL.Principal),
+  'joined' : IDL.Bool,
+});
 export const Feedback = IDL.Record({
   'comment' : IDL.Text,
   'sessionId' : IDL.Nat,
@@ -47,6 +56,11 @@ export const idlService = IDL.Service({
   'createUserProfile' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
   'endCall' : IDL.Func([IDL.Nat], [], []),
   'getActiveCall' : IDL.Func([], [IDL.Opt(Call)], ['query']),
+  'getAvailableScheduledSessions' : IDL.Func(
+      [],
+      [IDL.Vec(ScheduledSession)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getUserProfile' : IDL.Func(
@@ -54,9 +68,16 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'getUserScheduledSessions' : IDL.Func(
+      [],
+      [IDL.Vec(ScheduledSession)],
+      ['query'],
+    ),
   'initiateCall' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Nat], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'joinScheduledSession' : IDL.Func([IDL.Nat], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'scheduleSession' : IDL.Func([IDL.Int, IDL.Nat], [IDL.Nat], []),
   'startSession' : IDL.Func([], [IDL.Nat], []),
   'submitFeedback' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Text], [], []),
 });
@@ -83,6 +104,15 @@ export const idlFactory = ({ IDL }) => {
     'callerIceCandidates' : IDL.Vec(IDL.Text),
     'calleeIceCandidates' : IDL.Vec(IDL.Text),
   });
+  const ScheduledSession = IDL.Record({
+    'id' : IDL.Nat,
+    'duration' : IDL.Nat,
+    'scheduledTime' : IDL.Int,
+    'host' : IDL.Principal,
+    'isActive' : IDL.Bool,
+    'participant' : IDL.Opt(IDL.Principal),
+    'joined' : IDL.Bool,
+  });
   const Feedback = IDL.Record({
     'comment' : IDL.Text,
     'sessionId' : IDL.Nat,
@@ -103,6 +133,11 @@ export const idlFactory = ({ IDL }) => {
     'createUserProfile' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
     'endCall' : IDL.Func([IDL.Nat], [], []),
     'getActiveCall' : IDL.Func([], [IDL.Opt(Call)], ['query']),
+    'getAvailableScheduledSessions' : IDL.Func(
+        [],
+        [IDL.Vec(ScheduledSession)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getUserProfile' : IDL.Func(
@@ -110,9 +145,16 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'getUserScheduledSessions' : IDL.Func(
+        [],
+        [IDL.Vec(ScheduledSession)],
+        ['query'],
+      ),
     'initiateCall' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Nat], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'joinScheduledSession' : IDL.Func([IDL.Nat], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'scheduleSession' : IDL.Func([IDL.Int, IDL.Nat], [IDL.Nat], []),
     'startSession' : IDL.Func([], [IDL.Nat], []),
     'submitFeedback' : IDL.Func([IDL.Nat, IDL.Nat, IDL.Text], [], []),
   });

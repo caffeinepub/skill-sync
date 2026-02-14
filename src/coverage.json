@@ -1,64 +1,95 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T22:13:23.511Z",
+  "generatedAt": "2026-02-14T22:34:53.451Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 3,
+    "total": 6,
+    "implemented": 5,
     "items": [
       {
-        "id": "REQ-10",
-        "summary": "Replace the Live Class page’s video placeholder with a working 1:1 in-browser video call experience that can connect two authenticated users.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/components/liveclass/VideoCallPanel.tsx",
-          "frontend/src/hooks/useWebRTCPeer.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/components/liveclass/VideoCallPanel.tsx",
-          "frontend/src/hooks/useWebRTCPeer.ts"
-        ]
-      },
-      {
-        "id": "REQ-11",
-        "summary": "Implement 1:1 call signaling in the Motoko backend actor to allow two peers to exchange WebRTC offers/answers and ICE candidates via the canister (no third-party video SDK).",
+        "id": "REQ-14",
+        "summary": "Implement backend support for scheduled sessions (future date/time) that can be created by a host and joined by another authenticated user, including persistent storage and query endpoints for listing and retrieving sessions.",
         "status": "unknown",
         "plannedFiles": [],
         "matchedFiles": []
       },
       {
-        "id": "REQ-12",
-        "summary": "Add a simple, shareable “join link” flow so two people can reliably meet in the same 1:1 call without needing user search.",
+        "id": "REQ-15",
+        "summary": "Add React Query hooks for scheduled session operations and update the Dashboard to use backend-sourced upcoming sessions instead of localStorage sessions.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/components/liveclass/JoinLinkBox.tsx",
-          "frontend/src/utils/urlParams.ts"
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/DashboardPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/components/liveclass/JoinLinkBox.tsx"
+          "frontend/src/backend.d.ts",
+          "frontend/src/hooks/useQueries.ts",
+          "frontend/src/pages/DashboardPage.tsx"
         ]
       },
       {
-        "id": "REQ-13",
-        "summary": "Integrate frontend data-flow for signaling using the existing actor/React Query patterns, without modifying immutable hook files, and ensure the call connection state is resilient to refreshes/navigation.",
+        "id": "REQ-16",
+        "summary": "Add a “Create Session” UI flow that lets a logged-in user schedule a session (title, skill, date, time, duration) and produces a shareable join link for another user.",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/hooks/useCallSignaling.ts",
-          "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/backend.d.ts"
+          "frontend/src/components/sessions/CreateSessionDialog.tsx",
+          "frontend/src/components/liveclass/JoinLinkBox.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
         ],
         "matchedFiles": [
-          "frontend/src/hooks/useCallSignaling.ts",
+          "frontend/src/components/sessions/CreateSessionDialog.tsx",
+          "frontend/src/components/liveclass/JoinLinkBox.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-17",
+        "summary": "Implement a timed “Join Session” experience: the Join button is disabled until the allowed join window (e.g., at/near start time), and joining routes the user into the correct Live Class call room for that scheduled session.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/utils/scheduledSessionTime.ts",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/LiveClassPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/utils/scheduledSessionTime.ts",
+          "frontend/src/pages/DashboardPage.tsx",
+          "frontend/src/pages/LiveClassPage.tsx"
+        ]
+      },
+      {
+        "id": "REQ-18",
+        "summary": "Connect scheduled sessions to the existing WebRTC signaling/call flow so that calls are created between two distinct authenticated users (not self-calls) when a scheduled session starts/joined.",
+        "status": "implemented",
+        "plannedFiles": [
           "frontend/src/pages/LiveClassPage.tsx",
-          "frontend/src/backend.d.ts"
+          "frontend/src/components/liveclass/VideoCallPanel.tsx",
+          "frontend/src/hooks/useCallSignaling.ts"
+        ],
+        "matchedFiles": [
+          "frontend/src/pages/LiveClassPage.tsx",
+          "frontend/src/components/liveclass/VideoCallPanel.tsx",
+          "frontend/src/hooks/useCallSignaling.ts"
+        ]
+      },
+      {
+        "id": "REQ-19",
+        "summary": "Update the Skill Match booking flow to schedule real backend sessions (instead of only adding mock local sessions), while keeping user-facing text in English and preserving existing navigation patterns.",
+        "status": "implemented",
+        "plannedFiles": [
+          "frontend/src/components/sessions/BookSessionDialog.tsx",
+          "frontend/src/pages/SkillMatchPage.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
+        ],
+        "matchedFiles": [
+          "frontend/src/components/sessions/BookSessionDialog.tsx",
+          "frontend/src/pages/SkillMatchPage.tsx",
+          "frontend/src/pages/DashboardPage.tsx"
         ]
       }
     ]
@@ -67,21 +98,24 @@
     "backend/main.mo",
     "backend/migration.mo",
     "build-request.json",
-    "build-template/README.md",
-    "caffeine.lock.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
     "frontend/src/backend.d.ts",
     "frontend/src/backend.ts",
-    "frontend/src/camera/useCamera.ts",
     "frontend/src/components/liveclass/JoinLinkBox.tsx",
     "frontend/src/components/liveclass/VideoCallPanel.tsx",
+    "frontend/src/components/sessions/BookSessionDialog.tsx",
+    "frontend/src/components/sessions/CreateSessionDialog.tsx",
+    "frontend/src/components/sessions/SessionJoinLinkDialog.tsx",
     "frontend/src/declarations/backend.did.d.ts",
     "frontend/src/declarations/backend.did.js",
     "frontend/src/hooks/useCallSignaling.ts",
-    "frontend/src/hooks/useWebRTCPeer.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/LiveClassPage.tsx",
+    "frontend/src/pages/SkillMatchPage.tsx",
+    "frontend/src/utils/scheduledSessionTime.ts",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

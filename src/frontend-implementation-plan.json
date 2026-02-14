@@ -1,86 +1,138 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "1:1 WebRTC video calling on Live Class (frontend integration + join link + polling signaling)",
+  "title": "Scheduled sessions UI + timed join flow integrated with existing 1:1 WebRTC calls",
   "requirements": [
     {
-      "id": "REQ-10",
-      "summary": "Replace the /live-class video placeholder with a working 1:1 in-browser WebRTC call UI for two authenticated users, including local/remote video and basic call controls with robust permission/error handling.",
+      "id": "REQ-15",
+      "summary": "Add React Query hooks for scheduled session operations and switch Dashboard upcoming sessions to backend-sourced data.",
       "acceptanceCriteria": [
-        "On /live-class, the UI shows the local video preview and a remote video area (when connected).",
-        "The page provides call controls at minimum: Start/Join call, End call, and clear connection status text (e.g., “Waiting for peer…”, “Connecting…”, “Connected”, “Disconnected”).",
-        "The existing session timer and feedback/credits UI remain functional and usable alongside the video UI.",
-        "If camera/microphone permission is denied/unavailable, the UI shows a clear error message and does not crash."
+        "`frontend/src/hooks/useQueries.ts` includes query/mutation hooks for: createScheduledSession, listUpcomingSessions, getScheduledSessionById (if needed), joinScheduledSession, cancelScheduledSession.",
+        "Dashboard upcoming sessions list renders sessions returned from the backend and no longer depends on `useLocalSessions()` for the main upcoming sessions UI.",
+        "Each session row shows the scheduled date/time (in the user’s locale), duration, skill/title, and whether the caller is Host or Guest when applicable.",
+        "React Query caches are invalidated appropriately after create/join/cancel so the dashboard updates without manual refresh."
       ],
       "file_operations": [
-        {
-          "path": "frontend/src/pages/LiveClassPage.tsx",
-          "operation": "modify",
-          "description": "Replace the current video placeholder Card content with a composed 1:1 call panel (local+remote video, controls, status/error text) while keeping the existing timer and feedback/credits sections intact and usable. Use existing toast messaging for user-visible errors and state changes."
-        },
-        {
-          "path": "frontend/src/components/liveclass/VideoCallPanel.tsx",
-          "operation": "create",
-          "description": "Create a focused UI component for the video call area: local preview + remote video surface, Start/Join and End buttons, connection status text, and permission/device error display. Use the selected \"camera\" component hook (useCamera) to power the local camera preview; Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useWebRTCPeer.ts",
-          "operation": "create",
-          "description": "Implement a reusable hook that owns the RTCPeerConnection lifecycle (create/close, setLocal/RemoteDescription, handle ICE, attach remote MediaStream to a provided <video> ref, and expose a high-level connection state machine for the UI). Ensure cleanup on unmount and on End call, and handle permission/device failures without throwing unhandled errors."
-        }
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "summary": "Add a shareable join-link flow using callId in the /live-class URL, including auto-join behavior, copy-to-clipboard, and clear invalid/expired call error state with a start-new-call fallback.",
-      "acceptanceCriteria": [
-        "When a user starts a call, the UI displays a shareable link that includes the callId (e.g., /live-class?callId=...).",
-        "When a user opens /live-class with a callId present, the page automatically enters “join” mode and attempts to connect to the call.",
-        "The user can copy the link via a button and receives a confirmation toast/message that it was copied.",
-        "Invalid/expired callId shows a clear error state and offers a way to start a new call."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/LiveClassPage.tsx",
-          "operation": "modify",
-          "description": "Read callId from the URL on load (and persist it for refresh resilience) to decide Start vs Join mode. After creating a call, render the shareable join link and a Copy Link button with toast confirmation. If join fails due to invalid/expired callId, show a clear inline error state plus a Start New Call action that clears the invalid callId from the persisted state."
-        },
-        {
-          "path": "frontend/src/components/liveclass/JoinLinkBox.tsx",
-          "operation": "create",
-          "description": "Create a small composed UI block that renders the current callId, the fully-qualified shareable /live-class?callId=... link, and a Copy button (clipboard + toast). Keep it reusable within the Live Class page and avoid modifying immutable UI component files by composing existing UI primitives."
-        },
-        {
-          "path": "frontend/src/utils/urlParams.ts",
-          "operation": "modify",
-          "description": "Extend URL param utilities (without breaking existing behavior) to support the Live Class join-link flow: retrieving a persisted callId from URL or sessionStorage and providing a small helper to persist/clear callId used by /live-class."
-        }
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "summary": "Integrate signaling data-flow using existing actor + React Query patterns (polling-based), without modifying immutable hook files, and make connection state resilient across refreshes/navigation when callId is present.",
-      "acceptanceCriteria": [
-        "Frontend uses the existing backend actor (via existing app patterns) to create/join calls and exchange signaling messages.",
-        "Signaling receive is implemented using polling (React Query refetch interval or equivalent), since real-time sockets are not available.",
-        "Refreshing the page in a call with a valid callId keeps the page in join mode and attempts to reconnect (while clearly indicating the current state).",
-        "No changes are requested to any paths listed in frontend.immutablePaths."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useCallSignaling.ts",
-          "operation": "create",
-          "description": "Add new React Query hooks for call signaling using the existing actor pattern (via useActor): create/start call, join call by callId, send signaling messages (offer/answer/ICE), poll/fetch pending signaling messages on an interval, and end call. Ensure polling is enabled only when in an active call flow and actor is available, and surface backend authorization/validation errors to the caller for UI display."
-        },
-        {
-          "path": "frontend/src/pages/LiveClassPage.tsx",
-          "operation": "modify",
-          "description": "Wire the new signaling hooks into the Live Class call panel: use polling to receive signaling messages and drive the WebRTC peer hook (apply remote offer/answer, add remote ICE candidates). Persist callId (via urlParams helper) so refresh keeps join mode and automatically attempts to reconnect while showing clear state text (Waiting/Connecting/Connected/Disconnected)."
-        },
         {
           "path": "frontend/src/backend.d.ts",
           "operation": "modify",
-          "description": "Update the frontend backend interface type definitions to include the new callId-based signaling capabilities required by the Live Class WebRTC flow (create/join, send signaling messages, poll pending messages, end/cleanup), so new React Query hooks can call them in a type-safe way."
+          "description": "Update the frontend backend interface typings for scheduled sessions to match the new backend capabilities required by the BuildRequest (scheduled session fields + scheduled-session methods including create/list/get/join/cancel), so new React Query hooks can be type-safe."
+        },
+        {
+          "path": "frontend/src/hooks/useQueries.ts",
+          "operation": "modify",
+          "description": "Add React Query hooks for scheduled sessions (createScheduledSession, listUpcomingSessions, getScheduledSessionById, joinScheduledSession, cancelScheduledSession), using the existing `useActor` pattern and invalidating scheduled-session query caches after mutations."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Replace localStorage-backed upcoming sessions with backend-sourced scheduled sessions via the new hooks; render locale-formatted date/time, duration, skill/title, and a Host/Guest indicator based on the current identity principal; wire cache invalidation-driven updates (no manual refresh)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-16",
+      "summary": "Add a Create Session flow on the Dashboard to schedule a session and show a shareable join link containing the scheduled session id.",
+      "acceptanceCriteria": [
+        "Dashboard includes a clearly labeled action (button) to open a Create Session form.",
+        "The form validates required fields and prevents scheduling in the past (client-side).",
+        "On successful creation, the UI displays a shareable join URL containing the scheduled session id (copy-to-clipboard).",
+        "After creation, the new session appears in the Upcoming Sessions list immediately."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/sessions/CreateSessionDialog.tsx",
+          "operation": "create",
+          "description": "Create a reusable Create Session dialog (compose existing shadcn/ui components; verify the component's usage instructions before implementing) that collects title (optional), skill, date, time, and duration; performs client-side validation (including not-in-the-past); and calls the createScheduledSession hook on submit."
+        },
+        {
+          "path": "frontend/src/components/liveclass/JoinLinkBox.tsx",
+          "operation": "modify",
+          "description": "Extend/adjust the join link UI to also support generating a shareable scheduled-session join URL that includes the scheduled session id and provides copy-to-clipboard, while preserving existing callId link behavior."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Add a clearly labeled 'Create Session' action that opens the CreateSessionDialog; on success, show the scheduled-session join link (using the updated JoinLinkBox or a scheduled-session variant) and ensure the upcoming sessions list updates immediately via React Query invalidation."
+        }
+      ]
+    },
+    {
+      "id": "REQ-17",
+      "summary": "Implement a timed Join Session UX that disables Join until the allowed window and routes into Live Class with persisted scheduled-session context.",
+      "acceptanceCriteria": [
+        "Upcoming session cards show an enabled/disabled Join button based on the scheduled start time and the backend join-window rules.",
+        "If a user attempts to join too early via a link, the Live Class page shows a clear error message and does not start/attach a call.",
+        "When joining is permitted, clicking Join navigates to Live Class with enough URL parameters to restore the correct session context on refresh/navigation (using the existing URL param persistence utilities).",
+        "Both host and participant are routed into the same 1:1 call for that scheduled session."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/utils/scheduledSessionTime.ts",
+          "operation": "create",
+          "description": "Add small utilities for scheduled-session time handling (e.g., computing whether the client believes join should be enabled based on scheduled start time, and formatting start time in the user locale) to support consistent Join button state and messaging."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Update each scheduled session row/card to compute and display Join button enabled/disabled state using scheduled start time (client-side hint) and to attempt join via joinScheduledSession; when proceeding, navigate to Live Class with scheduled session context in the URL (e.g., sessionId plus any additional identifiers) using the existing persisted URL parameter utilities."
+        },
+        {
+          "path": "frontend/src/pages/LiveClassPage.tsx",
+          "operation": "modify",
+          "description": "Add scheduled-session join mode: read and persist a `sessionId` URL parameter (using existing urlParams helpers), load session details via getScheduledSessionById (when needed), and attempt join via joinScheduledSession; if join is too early (backend trap/error), render a clear, non-destructive error message and do not initiate/attach a call."
+        }
+      ]
+    },
+    {
+      "id": "REQ-18",
+      "summary": "Wire scheduled sessions into the existing WebRTC signaling flow so calls connect two distinct authenticated users (no self-calls) and converge on the same callId.",
+      "acceptanceCriteria": [
+        "Backend provides a way to associate a scheduled session with a call (e.g., create call on join, or create on host start) so both parties converge on the same callId.",
+        "Frontend Live Class no longer initiates calls by setting callee to the caller’s own principal for the scheduled-session path; instead it uses the real other participant derived from the scheduled session join state.",
+        "A user opening a scheduled session join link after both parties are associated can reliably connect (with the existing polling-based signaling hooks)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/pages/LiveClassPage.tsx",
+          "operation": "modify",
+          "description": "For scheduled-session mode, derive the other party's principal from scheduled session details/join state and use it when initiating a call (do not self-call); after a successful join/start association, ensure the page sets/persists the correct callId in the URL so refresh/navigation restores the same call context via existing polling hooks."
+        },
+        {
+          "path": "frontend/src/components/liveclass/VideoCallPanel.tsx",
+          "operation": "modify",
+          "description": "Allow the parent (LiveClassPage) to disable or gate the 'Start Call' action when scheduled-session prerequisites are not met (e.g., other participant not known yet), while keeping the existing non-scheduled demo call flow intact."
+        },
+        {
+          "path": "frontend/src/hooks/useCallSignaling.ts",
+          "operation": "modify",
+          "description": "Align query keys and invalidation patterns (if needed) so scheduled-session join/start flows reliably refresh the active call state using existing polling/React Query patterns (no WebSockets)."
+        }
+      ]
+    },
+    {
+      "id": "REQ-19",
+      "summary": "Update the Skill Match booking flow to create real backend scheduled sessions and surface shareable join links, without conflicting with demo local sessions.",
+      "acceptanceCriteria": [
+        "Clicking “Book a Session” results in a backend scheduled session being created (using user-selected schedule details or a minimal scheduling UI) and then appears on the Dashboard upcoming sessions list.",
+        "If the match target cannot be a real principal in the current mock data, the booking flow still results in a shareable join link that another authenticated user can use to join the scheduled session.",
+        "The old localStorage-based session list does not conflict with the backend-based list (either removed from the main UX path or clearly separated as demo-only)."
+      ],
+      "file_operations": [
+        {
+          "path": "frontend/src/components/sessions/BookSessionDialog.tsx",
+          "operation": "create",
+          "description": "Create a minimal booking dialog for Skill Match that collects (or defaults) schedule details (date/time/duration) and calls createScheduledSession; on success, show a scheduled-session join link with copy-to-clipboard (compose existing shadcn/ui components; verify the component's usage instructions before implementing)."
+        },
+        {
+          "path": "frontend/src/pages/SkillMatchPage.tsx",
+          "operation": "modify",
+          "description": "Replace the localStorage-only booking behavior with backend scheduled session creation via the new hooks and BookSessionDialog; keep user-facing text in English and preserve existing navigation patterns (e.g., navigate to Dashboard after booking), and ensure a shareable join link is shown when the match is mock-only."
+        },
+        {
+          "path": "frontend/src/pages/DashboardPage.tsx",
+          "operation": "modify",
+          "description": "Ensure any remaining localStorage sessions from `useLocalSessions()` are not used for the main upcoming sessions UI; if kept, clearly separate them as demo-only so they do not conflict with backend scheduled sessions."
         }
       ]
     }

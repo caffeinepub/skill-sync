@@ -3,12 +3,15 @@ import Time "mo:core/Time";
 import Runtime "mo:core/Runtime";
 import List "mo:core/List";
 import Timer "mo:core/Timer";
+import Nat "mo:core/Nat";
 import Array "mo:core/Array";
 import Principal "mo:core/Principal";
 import Migration "migration";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+// Specify the migration in the with clause so only the current code is used
 (with migration = Migration.run)
 actor {
   public type UserProfile = {
@@ -53,16 +56,28 @@ actor {
     calleeIceCandidates : [Text];
   };
 
+  public type ScheduledSession = {
+    id : Nat;
+    host : Principal;
+    participant : ?Principal;
+    scheduledTime : Int;
+    duration : Nat;
+    isActive : Bool;
+    joined : Bool;
+  };
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
   var nextSessionId = 1;
   var nextCallId = 1;
+  var nextScheduledSessionId = 1;
   let userProfiles = Map.empty<Principal, UserProfile>();
   let sessions = Map.empty<Nat, Session>();
   let timedSessions = Map.empty<Nat, TimedSession>();
   let calls = Map.empty<Nat, Call>();
   let userActiveCalls = Map.empty<Principal, Nat>();
+  let scheduledSessions = Map.empty<Nat, ScheduledSession>();
 
   // User profile management
 
@@ -154,8 +169,6 @@ actor {
     };
   };
 
-  // Remaining session methods...
-
   public shared ({ caller }) func submitFeedback(sessionId : Nat, rating : Nat, comment : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can submit feedback");
@@ -194,6 +207,98 @@ actor {
         };
       };
       case (null) { Runtime.trap("Session not found") };
+    };
+  };
+
+  // Scheduled sessions management
+
+  public shared ({ caller }) func scheduleSession(scheduledTime : Int, duration : Nat) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can schedule sessions");
+    };
+
+    let sessionId = nextScheduledSessionId;
+    nextScheduledSessionId += 1;
+
+    let session : ScheduledSession = {
+      id = sessionId;
+      host = caller;
+      participant = null;
+      scheduledTime;
+      duration;
+      isActive = false;
+      joined = false;
+    };
+
+    scheduledSessions.add(sessionId, session);
+    sessionId;
+  };
+
+  public query ({ caller }) func getAvailableScheduledSessions() : async [ScheduledSession] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view scheduled sessions");
+    };
+
+    let currentTime = Time.now();
+    let availableSessions = scheduledSessions.filter(
+      func(_id, session) {
+        session.scheduledTime > currentTime and not session.joined
+      }
+    );
+    availableSessions.values().toArray();
+  };
+
+  public query ({ caller }) func getUserScheduledSessions() : async [ScheduledSession] {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view scheduled sessions");
+    };
+
+    let userSessions = scheduledSessions.filter(
+      func(_id, session) {
+        session.host == caller or session.participant == ?caller
+      }
+    );
+    userSessions.values().toArray();
+  };
+
+  public shared ({ caller }) func joinScheduledSession(sessionId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can join scheduled sessions");
+    };
+
+    switch (scheduledSessions.get(sessionId)) {
+      case (?session) {
+        if (session.host == caller) {
+          Runtime.trap("Cannot join your own session");
+        };
+
+        if (optionHasValue(session.participant)) {
+          Runtime.trap("Session already has a participant");
+        };
+
+        let currentTime = Time.now();
+        if (currentTime < session.scheduledTime) {
+          Runtime.trap("Session has not started yet");
+        };
+
+        let updatedSession = {
+          session with
+          participant = ?caller;
+          isActive = true;
+          joined = true;
+        };
+        scheduledSessions.add(sessionId, updatedSession);
+
+        ignore initiateCall(session.host, "scheduled session offer");
+      };
+      case (null) { Runtime.trap("Scheduled session not found") };
+    };
+  };
+
+  func optionHasValue<T>(opt : ?T) : Bool {
+    switch (opt) {
+      case (null) { false };
+      case (?_) { true };
     };
   };
 

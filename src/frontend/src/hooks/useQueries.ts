@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { UserProfile } from '../backend';
+import type { UserProfile, ScheduledSession } from '../backend';
 
 export function useGetCallerUserProfile() {
   const { actor, isFetching: actorFetching } = useActor();
@@ -59,6 +59,65 @@ export function useSubmitFeedback() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['currentUserProfile'] });
+    },
+  });
+}
+
+// Scheduled Sessions
+
+export function useCreateScheduledSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ scheduledTime, duration }: { scheduledTime: bigint; duration: bigint }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.scheduleSession(scheduledTime, duration);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+    },
+  });
+}
+
+export function useGetUserScheduledSessions() {
+  const { actor, isFetching: actorFetching } = useActor();
+
+  return useQuery<ScheduledSession[]>({
+    queryKey: ['scheduledSessions'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getUserScheduledSessions();
+    },
+    enabled: !!actor && !actorFetching,
+    refetchInterval: 5000, // Poll every 5 seconds for updates
+  });
+}
+
+export function useGetScheduledSessionById() {
+  const { actor } = useActor();
+
+  return useMutation({
+    mutationFn: async (sessionId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      const sessions = await actor.getUserScheduledSessions();
+      return sessions.find(s => s.id === sessionId) || null;
+    },
+  });
+}
+
+export function useJoinScheduledSession() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (sessionId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.joinScheduledSession(sessionId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['scheduledSessions'] });
+      queryClient.invalidateQueries({ queryKey: ['activeCall'] });
     },
   });
 }

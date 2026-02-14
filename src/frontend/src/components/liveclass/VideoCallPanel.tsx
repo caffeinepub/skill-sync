@@ -15,6 +15,7 @@ interface VideoCallPanelProps {
   onIceCandidate: (candidate: string) => Promise<void>;
   onEndCall: () => Promise<void>;
   connectionStatus: string;
+  disabled?: boolean;
 }
 
 export default function VideoCallPanel({
@@ -26,6 +27,7 @@ export default function VideoCallPanel({
   onIceCandidate,
   onEndCall,
   connectionStatus,
+  disabled = false,
 }: VideoCallPanelProps) {
   const [isInitializing, setIsInitializing] = useState(false);
   const [hasProcessedOffer, setHasProcessedOffer] = useState(false);
@@ -50,8 +52,9 @@ export default function VideoCallPanel({
   const showLocalVideo = connectionState !== 'idle';
   const showRemoteVideo = connectionState === 'connected';
 
-  // Initialize local stream when starting a call
   const handleStartCall = async () => {
+    if (disabled) return;
+    
     setIsInitializing(true);
     const success = await initializeLocalStream();
     
@@ -64,7 +67,6 @@ export default function VideoCallPanel({
     setIsInitializing(false);
   };
 
-  // Process incoming offer (for answerer)
   useEffect(() => {
     if (!isInitiator && activeCall?.offer && !hasProcessedOffer && connectionState === 'idle') {
       setHasProcessedOffer(true);
@@ -84,7 +86,6 @@ export default function VideoCallPanel({
     }
   }, [isInitiator, activeCall?.offer, hasProcessedOffer, connectionState, initializeLocalStream, createAnswer, onAnswerCall]);
 
-  // Process incoming answer (for initiator)
   useEffect(() => {
     if (isInitiator && activeCall?.answer && !hasProcessedAnswer) {
       setHasProcessedAnswer(true);
@@ -92,7 +93,6 @@ export default function VideoCallPanel({
     }
   }, [isInitiator, activeCall?.answer, hasProcessedAnswer, setRemoteAnswer]);
 
-  // Process incoming ICE candidates
   useEffect(() => {
     if (!activeCall) return;
 
@@ -105,7 +105,6 @@ export default function VideoCallPanel({
     });
   }, [activeCall, isInitiator, addRemoteIceCandidate]);
 
-  // Cleanup on unmount or call end
   useEffect(() => {
     if (!isCallActive && connectionState !== 'idle') {
       closeConnection();
@@ -130,21 +129,17 @@ export default function VideoCallPanel({
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Error Display */}
         {error && (
           <Alert variant="destructive">
             <AlertDescription>{error}</AlertDescription>
           </Alert>
         )}
 
-        {/* Connection Status */}
         <div className="text-center text-sm text-muted-foreground">
           {connectionStatus}
         </div>
 
-        {/* Video Display */}
         <div className="space-y-4">
-          {/* Remote Video (large) */}
           <div className="relative aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg overflow-hidden border-2 border-border">
             {showRemoteVideo ? (
               <video
@@ -164,7 +159,6 @@ export default function VideoCallPanel({
               </div>
             )}
 
-            {/* Local Video (small, picture-in-picture) */}
             {showLocalVideo && (
               <div className="absolute bottom-4 right-4 w-32 h-24 rounded-lg overflow-hidden border-2 border-white shadow-lg bg-black">
                 <video
@@ -178,12 +172,11 @@ export default function VideoCallPanel({
             )}
           </div>
 
-          {/* Call Controls */}
           <div className="flex gap-2 justify-center">
             {!isCallActive ? (
               <Button
                 onClick={handleStartCall}
-                disabled={isInitializing}
+                disabled={isInitializing || disabled}
                 size="lg"
                 className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
               >

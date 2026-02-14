@@ -27,6 +27,15 @@ export interface Feedback {
   'sessionId' : bigint,
   'rating' : bigint,
 }
+export interface ScheduledSession {
+  'id' : bigint,
+  'duration' : bigint,
+  'scheduledTime' : bigint,
+  'host' : Principal,
+  'isActive' : boolean,
+  'participant' : [] | [Principal],
+  'joined' : boolean,
+}
 export interface UserProfile {
   'credits' : bigint,
   'name' : string,
@@ -44,12 +53,16 @@ export interface _SERVICE {
   'createUserProfile' : ActorMethod<[string, Array<string>], undefined>,
   'endCall' : ActorMethod<[bigint], undefined>,
   'getActiveCall' : ActorMethod<[], [] | [Call]>,
+  'getAvailableScheduledSessions' : ActorMethod<[], Array<ScheduledSession>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'getUserScheduledSessions' : ActorMethod<[], Array<ScheduledSession>>,
   'initiateCall' : ActorMethod<[Principal, string], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'joinScheduledSession' : ActorMethod<[bigint], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'scheduleSession' : ActorMethod<[bigint, bigint], bigint>,
   'startSession' : ActorMethod<[], bigint>,
   'submitFeedback' : ActorMethod<[bigint, bigint, string], undefined>,
 }

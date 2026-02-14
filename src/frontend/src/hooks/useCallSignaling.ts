@@ -5,12 +5,16 @@ import { Principal } from '@dfinity/principal';
 
 export function useInitiateCall() {
   const { actor } = useActor();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ callee, offer }: { callee: string; offer: string }) => {
       if (!actor) throw new Error('Actor not available');
       const calleePrincipal = Principal.fromText(callee);
       return actor.initiateCall(calleePrincipal, offer);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['activeCall'] });
     },
   });
 }
@@ -25,7 +29,7 @@ export function useGetActiveCall() {
       return actor.getActiveCall();
     },
     enabled: !!actor && !actorFetching,
-    refetchInterval: 2000, // Poll every 2 seconds
+    refetchInterval: 2000,
     retry: false,
   });
 }

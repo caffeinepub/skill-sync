@@ -1,105 +1,91 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-14T22:13:23.508Z",
-  "summary": "Diff adds new frontend components/hooks for a WebRTC-based video panel, join-link UI, and React Query polling for call state; backend main.mo adds Call-related types/state scaffolding and imports a no-op migration. Several BuildRequest acceptance criteria are not evidenced in the diff summary, especially around backend signaling API shape (create/join by callId, message exchange/polling), 2-party enforcement/TTL cleanup, and frontend join-by-link/error flows.",
+  "generatedAt": "2026-02-14T22:34:53.447Z",
+  "summary": "Diff adds initial scheduled-session scaffolding across backend and frontend (creation dialogs, join-link dialog, time utilities, React Query hooks, Dashboard/SkillMatch/LiveClass integration). However, multiple BuildRequest acceptance criteria appear unimplemented or only partially implemented: backend session fields and endpoints (title/skill/status, fetch-by-id, cancel, proper listing/upcoming filtering, authorization/read rules, join-window enforcement), frontend hooks (cancel/listUpcoming naming/behavior), and robust call association for scheduled sessions (callId convergence and using the real other participant instead of self-calls).",
   "missing_requirements": [
     {
-      "id": "REQ-11",
-      "requirement": "Backend exposes an API to create a new call (returns callId), join an existing call by callId, send signaling messages (offer/answer/ICE) to the other participant, poll/fetch pending signaling messages, and end/cleanup a call.",
-      "reason": "Diff summary only shows backend Call types and state variables (calls map, userActiveCalls, nextCallId) but does not show any of the required public backend methods (create/join/send/poll/end) or a pending-message model; frontend hooks call methods like initiateCall/getActiveCall/answerCall/addIceCandidate/endCall which are not evidenced in backend diff excerpt.",
+      "id": "REQ-14",
+      "requirement": "Backend scheduled session record must include title (optional), skill, start time, duration, and status (scheduled/active/completed/cancelled), with endpoints to create, list upcoming, fetch by id, join, and cancel (host only), plus auth/read restrictions and join-window trap errors.",
+      "reason": "The added/modified backend types for ScheduledSession do not include title, skill, or a status variant; they use fields like `isActive`/`joined` instead. The frontend calls backend methods `scheduleSession` and `joinScheduledSession`, but the diff summary does not show backend implementations or additional endpoints for listing upcoming, fetching by id, or canceling. Authorization/read restrictions and join-window enforcement are not evidenced in the shown backend code.",
       "evidence": [
         "backend/main.mo",
-        "frontend/src/hooks/useCallSignaling.ts"
+        "backend/migration.mo"
       ]
     },
     {
-      "id": "REQ-11",
-      "requirement": "A call is limited to exactly 2 distinct participants; a third user attempting to join is rejected with a clear error.",
-      "reason": "No evidence in the backend diff excerpt of join logic or participant-count enforcement/rejection behavior.",
+      "id": "REQ-15",
+      "requirement": "Frontend must add React Query hooks for createScheduledSession, listUpcomingSessions, getScheduledSessionById (if needed), joinScheduledSession, cancelScheduledSession; Dashboard must use backend-sourced upcoming sessions (not localStorage), show Host/Guest, and invalidate caches after create/join/cancel.",
+      "reason": "Hooks include create/list/join and a mutation-based `useGetScheduledSessionById` that searches within `getUserScheduledSessions`, but there is no `cancelScheduledSession` hook. The listing hook is `useGetUserScheduledSessions` rather than a clear 'upcoming sessions' query, and the evidence for host/guest labeling in each row is not visible in the truncated Dashboard. Cache invalidation after cancel cannot exist without cancel support.",
       "evidence": [
-        "backend/main.mo"
+        "frontend/src/hooks/useQueries.ts",
+        "frontend/src/pages/DashboardPage.tsx"
       ]
     },
     {
-      "id": "REQ-11",
-      "requirement": "Signaling messages are delivered only to the intended other participant (no public leakage).",
-      "reason": "No evidence of per-recipient message routing or access checks for signaling retrieval; frontend appears to poll getActiveCall (entire Call object) which could expose offer/answer/ICE if not strictly restricted, but backend enforcement is not shown in the diff excerpt.",
+      "id": "REQ-16",
+      "requirement": "Create Session flow must schedule a session with title, skill, date/time, duration, and on success show a shareable join URL containing the scheduled session id; created session should appear immediately.",
+      "reason": "CreateSessionDialog collects `title` and `skill`, but the mutation only sends `{ scheduledTime, duration }` to `actor.scheduleSession(...)`, so title/skill are not persisted via the shown API usage. The join link dialog is present, but immediate appearance depends on backend storing full session info and list refresh; the diff only shows invalidation of `['scheduledSessions']`.",
       "evidence": [
-        "backend/main.mo",
-        "frontend/src/hooks/useCallSignaling.ts"
+        "frontend/src/components/sessions/CreateSessionDialog.tsx",
+        "frontend/src/hooks/useQueries.ts"
       ]
     },
     {
-      "id": "REQ-11",
-      "requirement": "Calls are cleaned up on explicit end and/or via a reasonable TTL to avoid unbounded growth of in-canister state.",
-      "reason": "No evidence of TTL timers/cleanup logic in the backend diff excerpt; only maps/vars are shown.",
+      "id": "REQ-17",
+      "requirement": "Timed Join experience: Join disabled until allowed join window per backend rules; early join via link shows clear error and does not start/attach a call; joining routes to Live Class with URL parameters to restore context; both parties end up in same 1:1 call.",
+      "reason": "Join gating is implemented client-side via `canJoinSession(...)` (5 minutes) and toast errors, but there is no evidence the backend enforces the same join-window rules or returns a clear trap error. LiveClassPage logic for scheduled sessions is truncated and shows suspicious/incorrect callId assignment (`setCallId(BigInt(activeCall.caller.toString() === myPrincipal ? '1' : '2')); //`), which does not demonstrate reliable routing into the correct call room.",
       "evidence": [
-        "backend/main.mo"
-      ]
-    },
-    {
-      "id": "REQ-12",
-      "requirement": "When a user opens /live-class with a callId present, the page automatically enters join mode and attempts to connect to the call.",
-      "reason": "LiveClassPage checks for callId via getPersistedUrlParameter, but the auto-join effect only sets local state if `activeCall` already exists and shows the user is already a participant; there is no evidenced backend call to \"join existing call by callId\" or to fetch call state by callId.",
-      "evidence": [
+        "frontend/src/utils/scheduledSessionTime.ts",
+        "frontend/src/pages/DashboardPage.tsx",
         "frontend/src/pages/LiveClassPage.tsx"
       ]
     },
     {
-      "id": "REQ-12",
-      "requirement": "Invalid/expired callId shows a clear error state and offers a way to start a new call.",
-      "reason": "No evidence of UI state handling for invalid/expired callId (error banner/state + CTA). The shown auto-join logic silently depends on activeCall/participant check without showing an invalid/expired error flow.",
+      "id": "REQ-18",
+      "requirement": "Connect scheduled sessions to the existing WebRTC signaling/call flow so calls are created between two distinct authenticated users (not self-calls), with a shared callId associated to the scheduled session so both parties converge reliably (including after refresh).",
+      "reason": "No evidence in the diff summary shows backend associating a scheduled session to a `callId` (ScheduledSession type has no callId field). LiveClassPage scheduled-session handling is truncated and does not show deriving the other participant principal from the scheduled session join state, nor a reliable mechanism to obtain/restore the correct callId.",
       "evidence": [
+        "backend/main.mo",
+        "backend/migration.mo",
         "frontend/src/pages/LiveClassPage.tsx"
-      ]
-    },
-    {
-      "id": "REQ-13",
-      "requirement": "Ensure the call connection state is resilient to refreshes/navigation; refreshing the page in a call with a valid callId keeps the page in join mode and attempts to reconnect (while clearly indicating the current state).",
-      "reason": "Join-link is generated with a hash URL and callId param, and callId is read on mount, but reconnection is gated on `activeCall` and participant check; no evidence of re-joining by callId or re-establishing signaling state after refresh beyond polling getActiveCall.",
-      "evidence": [
-        "frontend/src/components/liveclass/JoinLinkBox.tsx",
-        "frontend/src/pages/LiveClassPage.tsx",
-        "frontend/src/hooks/useCallSignaling.ts"
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Call initiation is implemented as specifying a callee Principal (and in LiveClassPage it initiates a call to the caller themself 'for demo purposes'), rather than a shareable callId-based create/join flow.",
-      "reason": "BuildRequest requires a join-link flow to meet without user search (create returns callId; peer joins by callId). The diff instead introduces `initiateCall(callee, offer)` and explicitly calls self as callee in LiveClassPage, which is not requested and conflicts with the intended join-by-link mechanism.",
+      "description": "Added ScheduledSession backend data model fields `isActive` and `joined` instead of the requested `status` enum (scheduled/active/completed/cancelled), and omitted requested fields like `title` and `skill` from the evidenced model.",
+      "reason": "BuildRequest explicitly requires status and title/skill on each scheduled session record; the diff implements a different shape, which is an unrequested deviation from the specified contract.",
       "evidence": [
-        "frontend/src/hooks/useCallSignaling.ts",
-        "frontend/src/pages/LiveClassPage.tsx"
+        "backend/main.mo",
+        "backend/migration.mo"
       ]
     },
     {
-      "description": "Use of public Google STUN servers (stun.l.google.com) configured in the WebRTC hook.",
-      "reason": "Not mentioned in the BuildRequest; while STUN is common for WebRTC, it is an external network dependency that was not explicitly requested in the requirements.",
+      "description": "Client-side join-window rule hardcoded to '5 minutes before' in UI utilities and messaging.",
+      "reason": "BuildRequest allows an example join window but requires alignment with backend join-window rules; the diff introduces a fixed client-side rule and messaging that may not match backend enforcement (not evidenced).",
       "evidence": [
-        "frontend/src/hooks/useWebRTCPeer.ts"
-      ]
-    },
-    {
-      "description": "Added backend/migration.mo and wired migration into backend/main.mo as a no-op migration.",
-      "reason": "BuildRequest allows adding migration.mo only if state upgrade requires it; diff shows a no-op migration with no demonstrated need/upgrade logic in the truncated summary.",
-      "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo"
+        "frontend/src/utils/scheduledSessionTime.ts",
+        "frontend/src/components/sessions/SessionJoinLinkDialog.tsx"
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.64,
   "changed_files": [
     "backend/main.mo",
     "backend/migration.mo",
     "frontend-file-summaries.txt",
     "frontend/src/components/liveclass/JoinLinkBox.tsx",
     "frontend/src/components/liveclass/VideoCallPanel.tsx",
+    "frontend/src/components/sessions/BookSessionDialog.tsx",
+    "frontend/src/components/sessions/CreateSessionDialog.tsx",
+    "frontend/src/components/sessions/SessionJoinLinkDialog.tsx",
     "frontend/src/hooks/useCallSignaling.ts",
-    "frontend/src/hooks/useWebRTCPeer.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/pages/DashboardPage.tsx",
     "frontend/src/pages/LiveClassPage.tsx",
+    "frontend/src/pages/SkillMatchPage.tsx",
+    "frontend/src/utils/scheduledSessionTime.ts",
     "project_state.json"
   ]
 }

@@ -6,13 +6,17 @@ import { Copy, Check, Link2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface JoinLinkBoxProps {
-  callId: bigint;
+  callId?: bigint;
+  sessionId?: bigint;
+  type?: 'call' | 'session';
 }
 
-export default function JoinLinkBox({ callId }: JoinLinkBoxProps) {
+export default function JoinLinkBox({ callId, sessionId, type = 'call' }: JoinLinkBoxProps) {
   const [copied, setCopied] = useState(false);
 
-  const joinUrl = `${window.location.origin}${window.location.pathname}#/live-class?callId=${callId}`;
+  const id = type === 'call' ? callId : sessionId;
+  const paramName = type === 'call' ? 'callId' : 'sessionId';
+  const joinUrl = `${window.location.origin}${window.location.pathname}#/live-class?${paramName}=${id}`;
 
   const handleCopy = async () => {
     try {
@@ -33,7 +37,9 @@ export default function JoinLinkBox({ callId }: JoinLinkBoxProps) {
           Share Join Link
         </CardTitle>
         <CardDescription>
-          Share this link with the person you want to call
+          {type === 'call' 
+            ? 'Share this link with the person you want to call'
+            : 'Share this link to let others join your session'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -57,7 +63,7 @@ export default function JoinLinkBox({ callId }: JoinLinkBoxProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground">
-          Call ID: {callId.toString()}
+          {type === 'call' ? 'Call' : 'Session'} ID: {id?.toString()}
         </p>
       </CardContent>
     </Card>

@@ -1,13 +1,16 @@
 # Specification
 
 ## Summary
-**Goal:** Enable real 1:1 in-browser video calls on the Live Class page using WebRTC, with signaling handled by the existing Motoko canister and a simple join-link flow.
+**Goal:** Enable users to create scheduled 1:1 sessions, share a join link, and join at the right time into the correct Live Class video call.
 
 **Planned changes:**
-- Update `/live-class` to replace the video placeholder with a working WebRTC UI: local preview, remote video area, and basic controls (Start/Join, End) plus clear connection status text.
-- Add a shareable join-link flow using `callId` (e.g., `/live-class?callId=...`), including copy-to-clipboard and clear handling for invalid/expired calls.
-- Implement Motoko canister signaling APIs to create/join/end calls and exchange offer/answer/ICE messages securely between exactly two authenticated participants, with cleanup/TTL.
-- Integrate signaling into the frontend using existing actor + React Query patterns with polling for message receipt, ensuring resilience across refresh/navigation and without modifying immutable UI/hook paths.
-- Add permission/availability error handling for camera/microphone denial so the page shows a clear error state without crashing, while keeping the existing session timer and feedback/credits UI usable.
+- Add backend persistent scheduled-session support: create, list upcoming for caller, fetch by id, join by id, and cancel (host only), with authorization and status tracking.
+- Enforce a backend join-window rule and return a clear error when joining too early.
+- Add React Query hooks for scheduled-session create/list/get/join/cancel and invalidate caches after mutations.
+- Update Dashboard to source Upcoming Sessions from the backend (not localStorage), showing localized time, duration, skill/title, and Host/Guest role, plus a timed Join button.
+- Add a Create Session form on the Dashboard (title optional, skill, date, time, duration) with validation and a copyable share link containing the session id.
+- Implement timed Join Session routing into Live Class with URL parameters to restore session context on refresh; show a clear error if joined too early via link.
+- Connect scheduled sessions to the existing WebRTC signaling flow so host and participant converge on the same 1:1 callId and do not self-call.
+- Update the Skill Match “Book a Session” flow to create real backend scheduled sessions and surface the resulting join link and dashboard entry, keeping text in English.
 
-**User-visible outcome:** Two authenticated users can start or join a Live Class 1:1 video call via a shareable link, see connection status, control the call, and reliably connect/reconnect using in-browser video without third-party video services.
+**User-visible outcome:** Logged-in users can schedule a session, copy a shareable join link, see backend-backed upcoming sessions on the dashboard, and join (only when allowed) into the correct 1:1 Live Class call with another authenticated user.

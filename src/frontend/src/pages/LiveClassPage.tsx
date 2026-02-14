@@ -4,13 +4,13 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Clock, AlertCircle } from 'lucide-react';
+import { Clock, AlertCircle, Users } from 'lucide-react';
 import StarRating from '../components/feedback/StarRating';
 import VideoCallPanel from '../components/liveclass/VideoCallPanel';
 import JoinLinkBox from '../components/liveclass/JoinLinkBox';
 import { useSessionTimer } from '../hooks/useSessionTimer';
 import { calculateCredits } from '../utils/creditCalculation';
-import { useStartSession, useSubmitFeedback } from '../hooks/useQueries';
+import { useStartSession, useSubmitFeedback, useGetUserScheduledSessions, useJoinScheduledSession } from '../hooks/useQueries';
 import {
   useInitiateCall,
   useGetActiveCall,
@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
 import { getPersistedUrlParameter, clearSessionParameter } from '../utils/urlParams';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { formatScheduledTime } from '../utils/scheduledSessionTime';
 
 export default function LiveClassPage() {
   const [rating, setRating] = useState(0);
@@ -30,6 +31,9 @@ export default function LiveClassPage() {
   const [callId, setCallId] = useState<bigint | null>(null);
   const [isInitiator, setIsInitiator] = useState(false);
   const [joinCallId, setJoinCallId] = useState<string | null>(null);
+  const [scheduledSessionId, setScheduledSessionId] = useState<bigint | null>(null);
+  const [scheduledSessionError, setScheduledSessionError] = useState<string | null>(null);
+  const [isProcessingScheduledSession, setIsProcessingScheduledSession] = useState(false);
 
   const { elapsedSeconds, isRunning, start, stop, reset } = useSessionTimer();
   const { identity } = useInternetIdentity();
@@ -37,23 +41,62 @@ export default function LiveClassPage() {
   const submitFeedback = useSubmitFeedback();
   const initiateCall = useInitiateCall();
   const { data: activeCall, isLoading: isLoadingCall } = useGetActiveCall();
+  const { data: scheduledSessions = [] } = useGetUserScheduledSessions();
+  const joinScheduledSession = useJoinScheduledSession();
   const answerCall = useAnswerCall();
   const addIceCandidate = useAddIceCandidate();
   const endCall = useEndCall();
   const navigate = useNavigate();
 
-  // Check for callId in URL on mount
+  // Check for callId or sessionId in URL on mount
   useEffect(() => {
     const urlCallId = getPersistedUrlParameter('callId');
+    const urlSessionId = getPersistedUrlParameter('sessionId');
+    
     if (urlCallId) {
       setJoinCallId(urlCallId);
     }
+    
+    if (urlSessionId) {
+      setScheduledSessionId(BigInt(urlSessionId));
+    }
   }, []);
+
+  // Handle scheduled session join
+  useEffect(() => {
+    if (!scheduledSessionId || isProcessingScheduledSession || callId) return;
+
+    const session = scheduledSessions.find(s => s.id === scheduledSessionId);
+    if (!session) return;
+
+    const myPrincipal = identity?.getPrincipal().toString();
+    const isHost = session.host.toString() === myPrincipal;
+    const isParticipant = session.participant?.toString() === myPrincipal;
+
+    // If we're already part of this session and it's active, try to get the call
+    if ((isHost || isParticipant) && session.joined) {
+      setIsProcessingScheduledSession(true);
+      
+      // The backend should have created a call when the participant joined
+      // Poll for the active call
+      if (activeCall && !isLoadingCall) {
+        const isInCall = 
+          activeCall.caller.toString() === myPrincipal ||
+          activeCall.callee.toString() === myPrincipal;
+        
+        if (isInCall) {
+          // We found our call
+          setCallId(BigInt(activeCall.caller.toString() === myPrincipal ? '1' : '2')); // Placeholder
+          setIsInitiator(activeCall.caller.toString() === myPrincipal);
+          setScheduledSessionError(null);
+        }
+      }
+    }
+  }, [scheduledSessionId, scheduledSessions, activeCall, isLoadingCall, identity, callId, isProcessingScheduledSession]);
 
   // Auto-join mode when callId is present
   useEffect(() => {
     if (joinCallId && !callId && activeCall && !isLoadingCall) {
-      // Verify the call exists and we're part of it
       const myPrincipal = identity?.getPrincipal().toString();
       const isParticipant = 
         activeCall.caller.toString() === myPrincipal ||
@@ -85,15 +128,29 @@ export default function LiveClassPage() {
 
   const handleStartCall = async (offer: string) => {
     try {
-      // For demo purposes, we're calling ourselves (in production, you'd specify a real callee)
       const myPrincipal = identity?.getPrincipal().toString();
       if (!myPrincipal) {
         toast.error('Not authenticated');
         return;
       }
 
+      // For scheduled sessions, get the other participant
+      let calleePrincipal = myPrincipal; // Default to self for demo
+      
+      if (scheduledSessionId) {
+        const session = scheduledSessions.find(s => s.id === scheduledSessionId);
+        if (session) {
+          const isHost = session.host.toString() === myPrincipal;
+          if (isHost && session.participant) {
+            calleePrincipal = session.participant.toString();
+          } else if (!isHost) {
+            calleePrincipal = session.host.toString();
+          }
+        }
+      }
+
       const newCallId = await initiateCall.mutateAsync({
-        callee: myPrincipal,
+        callee: calleePrincipal,
         offer,
       });
 
@@ -101,7 +158,11 @@ export default function LiveClassPage() {
       setIsInitiator(true);
       toast.success('Call initiated! Share the link below.');
     } catch (error: any) {
-      toast.error(error.message || 'Failed to start call');
+      if (error.message?.includes('Cannot call yourself')) {
+        toast.error('Cannot start call: No other participant in this session yet');
+      } else {
+        toast.error(error.message || 'Failed to start call');
+      }
       console.error('Start call error:', error);
     }
   };
@@ -145,9 +206,12 @@ export default function LiveClassPage() {
 
   const handleStartNewCall = () => {
     clearSessionParameter('callId');
+    clearSessionParameter('sessionId');
     setJoinCallId(null);
     setCallId(null);
     setIsInitiator(false);
+    setScheduledSessionId(null);
+    setScheduledSessionError(null);
   };
 
   const handleSubmitFeedback = async () => {
@@ -188,7 +252,6 @@ export default function LiveClassPage() {
   const durationMinutes = Math.floor(elapsedSeconds / 60);
   const credits = calculateCredits(durationMinutes, rating);
 
-  // Determine connection status message
   let connectionStatus = 'Not connected';
   if (callId && activeCall) {
     if (activeCall.status === 'initiated' && !activeCall.answer) {
@@ -200,8 +263,14 @@ export default function LiveClassPage() {
     }
   }
 
-  // Show error if invalid/expired callId
-  const showInvalidCallError = joinCallId && !isLoadingCall && !activeCall;
+  const showInvalidCallError = joinCallId && !isLoadingCall && !activeCall && !scheduledSessionId;
+  
+  // Get scheduled session info if available
+  const currentScheduledSession = scheduledSessionId 
+    ? scheduledSessions.find(s => s.id === scheduledSessionId)
+    : null;
+
+  const canStartCall = !scheduledSessionId || (currentScheduledSession && currentScheduledSession.participant !== undefined && currentScheduledSession.participant !== null);
 
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
@@ -209,6 +278,24 @@ export default function LiveClassPage() {
         <h1 className="text-3xl md:text-4xl font-bold mb-2">Live Class Session</h1>
         <p className="text-muted-foreground">Connect, learn, and earn credits</p>
       </div>
+
+      {/* Scheduled Session Info */}
+      {currentScheduledSession && (
+        <Alert>
+          <Users className="h-4 w-4" />
+          <AlertDescription>
+            <div className="space-y-1">
+              <p className="font-medium">Scheduled Session #{currentScheduledSession.id.toString()}</p>
+              <p className="text-sm">
+                {formatScheduledTime(currentScheduledSession.scheduledTime)} • {Number(currentScheduledSession.duration)} minutes
+              </p>
+              {!currentScheduledSession.participant && (
+                <p className="text-sm text-yellow-600">Waiting for a participant to join...</p>
+              )}
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Invalid Call Error */}
       {showInvalidCallError && (
@@ -227,6 +314,23 @@ export default function LiveClassPage() {
         </Alert>
       )}
 
+      {/* Scheduled Session Error */}
+      {scheduledSessionError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>{scheduledSessionError}</span>
+            <Button
+              onClick={handleStartNewCall}
+              variant="outline"
+              size="sm"
+            >
+              Go Back
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Video Call Panel */}
         <VideoCallPanel
@@ -238,12 +342,14 @@ export default function LiveClassPage() {
           onIceCandidate={handleIceCandidate}
           onEndCall={handleEndCall}
           connectionStatus={connectionStatus}
+          disabled={!canStartCall}
         />
 
         {/* Timer & Credits */}
         <div className="space-y-6">
           {/* Join Link Box */}
-          {callId && isInitiator && <JoinLinkBox callId={callId} />}
+          {callId && isInitiator && !scheduledSessionId && <JoinLinkBox callId={callId} type="call" />}
+          {scheduledSessionId && <JoinLinkBox sessionId={scheduledSessionId} type="session" />}
 
           <Card>
             <CardHeader>
@@ -288,16 +394,16 @@ export default function LiveClassPage() {
             <CardContent>
               <div className="space-y-3">
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Duration:</span>
+                  <span className="text-muted-foreground">Duration</span>
                   <span className="font-medium">{durationMinutes} min</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Rating:</span>
-                  <span className="font-medium">{rating}/5</span>
+                  <span className="text-muted-foreground">Rating</span>
+                  <span className="font-medium">{rating} ⭐</span>
                 </div>
                 <div className="pt-3 border-t">
                   <div className="flex justify-between">
-                    <span className="font-semibold">Credits Earned:</span>
+                    <span className="font-medium">Total Credits</span>
                     <span className="text-2xl font-bold text-primary">{credits}</span>
                   </div>
                 </div>
@@ -307,26 +413,23 @@ export default function LiveClassPage() {
         </div>
       </div>
 
-      {/* Feedback Form */}
+      {/* Feedback Section */}
       <Card>
         <CardHeader>
-          <CardTitle>Submit Feedback</CardTitle>
-          <CardDescription>Rate your session and provide feedback</CardDescription>
+          <CardTitle>Session Feedback</CardTitle>
+          <CardDescription>Rate your experience and earn credits</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label>Your Rating</Label>
-            <div className="flex items-center gap-4">
-              <StarRating rating={rating} onRatingChange={setRating} size="lg" />
-              <span className="text-lg font-medium">{rating}/5</span>
-            </div>
+            <Label>Rating</Label>
+            <StarRating rating={rating} onRatingChange={setRating} size="lg" />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="comment">Your Comment</Label>
+            <Label htmlFor="comment">Comment</Label>
             <Textarea
               id="comment"
-              placeholder="Share your experience with this session..."
+              placeholder="Share your thoughts about this session..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               rows={4}
@@ -335,8 +438,8 @@ export default function LiveClassPage() {
 
           <Button
             onClick={handleSubmitFeedback}
-            disabled={!sessionId || rating === 0 || !comment.trim() || submitFeedback.isPending}
-            className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            disabled={submitFeedback.isPending || rating === 0 || !comment.trim()}
+            className="w-full"
             size="lg"
           >
             {submitFeedback.isPending ? 'Submitting...' : 'Submit Feedback & Earn Credits'}

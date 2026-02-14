@@ -6,7 +6,8 @@ import MatchCard, { type MatchCardData } from '../components/match/MatchCard';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useNavigate } from '@tanstack/react-router';
 import { toast } from 'sonner';
-import { useLocalSessions } from '../hooks/useSessionsLocal';
+import BookSessionDialog from '../components/sessions/BookSessionDialog';
+import SessionJoinLinkDialog from '../components/sessions/SessionJoinLinkDialog';
 
 const categories = ['All', 'Coding', 'Design', 'Music', 'Language', 'Math', 'Science'];
 
@@ -24,9 +25,12 @@ const mockMatches: MatchCardData[] = [
 export default function SkillMatchPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
+  const [bookingMatch, setBookingMatch] = useState<MatchCardData | null>(null);
+  const [showJoinLinkDialog, setShowJoinLinkDialog] = useState(false);
+  const [createdSessionId, setCreatedSessionId] = useState<bigint | null>(null);
+  
   const { identity } = useInternetIdentity();
   const navigate = useNavigate();
-  const { addSession } = useLocalSessions();
 
   const filteredMatches = mockMatches.filter((match) => {
     const matchesSearch = searchQuery === '' || 
@@ -46,21 +50,18 @@ export default function SkillMatchPage() {
       return;
     }
 
-    // Add to local sessions
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    
-    addSession({
-      id: `session-${Date.now()}`,
-      skill: match.skills[0],
-      partnerName: match.name,
-      date: tomorrow.toLocaleDateString(),
-      time: '2:00 PM',
-      status: 'scheduled',
-    });
+    setBookingMatch(match);
+  };
 
-    toast.success(`Session booked with ${match.name}!`);
-    navigate({ to: '/dashboard' });
+  const handleBookingSuccess = (sessionId: bigint) => {
+    setCreatedSessionId(sessionId);
+    setShowJoinLinkDialog(true);
+    setBookingMatch(null);
+    
+    // Navigate to dashboard after a short delay
+    setTimeout(() => {
+      navigate({ to: '/dashboard' });
+    }, 3000);
   };
 
   return (
@@ -107,6 +108,26 @@ export default function SkillMatchPage() {
           ))
         )}
       </div>
+
+      {/* Book Session Dialog */}
+      {bookingMatch && (
+        <BookSessionDialog
+          open={!!bookingMatch}
+          onOpenChange={(open) => !open && setBookingMatch(null)}
+          matchName={bookingMatch.name}
+          skill={bookingMatch.skills[0]}
+          onSuccess={handleBookingSuccess}
+        />
+      )}
+
+      {/* Session Join Link Dialog */}
+      {createdSessionId && (
+        <SessionJoinLinkDialog
+          open={showJoinLinkDialog}
+          onOpenChange={setShowJoinLinkDialog}
+          sessionId={createdSessionId}
+        />
+      )}
     </div>
   );
 }

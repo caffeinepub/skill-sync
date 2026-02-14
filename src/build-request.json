@@ -1,96 +1,155 @@
 {
   "kind": "build_request",
-  "title": "Enable real 1:1 video calls in Live Class (WebRTC with IC-based signaling)",
+  "title": "Add scheduled session creation and timed join flow integrated with 1:1 video calls",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-10",
-      "text": "Replace the Live Class page’s video placeholder with a working 1:1 in-browser video call experience that can connect two authenticated users.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-5"
-        ],
-        "quotes": [
-          "i  want that this will connect two persons via video calls"
-        ]
-      },
-      "acceptanceCriteria": [
-        "On /live-class, the UI shows the local video preview and a remote video area (when connected).",
-        "The page provides call controls at minimum: Start/Join call, End call, and clear connection status text (e.g., “Waiting for peer…”, “Connecting…”, “Connected”, “Disconnected”).",
-        "The existing session timer and feedback/credits UI remain functional and usable alongside the video UI.",
-        "If camera/microphone permission is denied/unavailable, the UI shows a clear error message and does not crash."
-      ]
-    },
-    {
-      "id": "REQ-11",
-      "text": "Implement 1:1 call signaling in the Motoko backend actor to allow two peers to exchange WebRTC offers/answers and ICE candidates via the canister (no third-party video SDK).",
+      "id": "REQ-14",
+      "text": "Implement backend support for scheduled sessions (future date/time) that can be created by a host and joined by another authenticated user, including persistent storage and query endpoints for listing and retrieving sessions.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "recent-4",
+          "recent-8",
+          "recent-11"
         ],
         "quotes": [
-          "i  want that this will connect two persons via video calls"
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes an API to: create a new call (returns a callId), join an existing call by callId, send signaling messages (offer/answer/ICE) to the other participant, poll/fetch pending signaling messages, and end/cleanup a call.",
-        "A call is limited to exactly 2 distinct participants; a third user attempting to join is rejected with a clear error.",
-        "Only authenticated users (with the existing user permission model) can create/join/send signaling messages.",
-        "Signaling messages are delivered only to the intended other participant (no public leakage).",
-        "Calls are cleaned up on explicit end and/or via a reasonable TTL to avoid unbounded growth of in-canister state."
+        "Backend exposes methods to: create a scheduled session with title (optional), skill, start timestamp, and duration; list upcoming sessions for the caller (as host or participant); fetch a session by id; join a session by id; cancel a session (host only).",
+        "Each scheduled session record includes: id, host principal, optional participant principal (set on join), start time (UTC timestamp), duration (minutes), skill/title, and status (scheduled/active/completed/cancelled).",
+        "Authorization is enforced: only authenticated users can create/list/join; only the host can cancel; only host/participant can read full session details.",
+        "Joining a session before the allowed join window returns a clear error (trap) that the frontend can display."
       ]
     },
     {
-      "id": "REQ-12",
-      "text": "Add a simple, shareable “join link” flow so two people can reliably meet in the same 1:1 call without needing user search.",
+      "id": "REQ-15",
+      "text": "Add React Query hooks for scheduled session operations and update the Dashboard to use backend-sourced upcoming sessions instead of localStorage sessions.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "recent-4",
+          "recent-8",
+          "recent-11"
         ],
         "quotes": [
-          "i  want that this will connect two persons via video calls"
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
         ]
       },
       "acceptanceCriteria": [
-        "When a user starts a call, the UI displays a shareable link that includes the callId (e.g., /live-class?callId=...).",
-        "When a user opens /live-class with a callId present, the page automatically enters “join” mode and attempts to connect to the call.",
-        "The user can copy the link via a button and receives a confirmation toast/message that it was copied.",
-        "Invalid/expired callId shows a clear error state and offers a way to start a new call."
+        "`frontend/src/hooks/useQueries.ts` includes query/mutation hooks for: createScheduledSession, listUpcomingSessions, getScheduledSessionById (if needed), joinScheduledSession, cancelScheduledSession.",
+        "Dashboard upcoming sessions list renders sessions returned from the backend and no longer depends on `useLocalSessions()` for the main upcoming sessions UI.",
+        "Each session row shows the scheduled date/time (in the user’s locale), duration, skill/title, and whether the caller is Host or Guest when applicable.",
+        "React Query caches are invalidated appropriately after create/join/cancel so the dashboard updates without manual refresh."
       ]
     },
     {
-      "id": "REQ-13",
-      "text": "Integrate frontend data-flow for signaling using the existing actor/React Query patterns, without modifying immutable hook files, and ensure the call connection state is resilient to refreshes/navigation.",
+      "id": "REQ-16",
+      "text": "Add a “Create Session” UI flow that lets a logged-in user schedule a session (title, skill, date, time, duration) and produces a shareable join link for another user.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-5"
+          "recent-4",
+          "recent-8",
+          "recent-11"
         ],
         "quotes": [
-          "i  want that this will connect two persons via video calls"
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
         ]
       },
       "acceptanceCriteria": [
-        "Frontend uses the existing backend actor (via existing app patterns) to create/join calls and exchange signaling messages.",
-        "Signaling receive is implemented using polling (React Query refetch interval or equivalent), since real-time sockets are not available.",
-        "Refreshing the page in a call with a valid callId keeps the page in join mode and attempts to reconnect (while clearly indicating the current state).",
-        "No changes are requested to any paths listed in frontend.immutablePaths."
+        "Dashboard includes a clearly labeled action (button) to open a Create Session form.",
+        "The form validates required fields and prevents scheduling in the past (client-side).",
+        "On successful creation, the UI displays a shareable join URL containing the scheduled session id (copy-to-clipboard).",
+        "After creation, the new session appears in the Upcoming Sessions list immediately."
+      ]
+    },
+    {
+      "id": "REQ-17",
+      "text": "Implement a timed “Join Session” experience: the Join button is disabled until the allowed join window (e.g., at/near start time), and joining routes the user into the correct Live Class call room for that scheduled session.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-4",
+          "recent-8",
+          "recent-11"
+        ],
+        "quotes": [
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Upcoming session cards show an enabled/disabled Join button based on the scheduled start time and the backend join-window rules.",
+        "If a user attempts to join too early via a link, the Live Class page shows a clear error message and does not start/attach a call.",
+        "When joining is permitted, clicking Join navigates to Live Class with enough URL parameters to restore the correct session context on refresh/navigation (using the existing URL param persistence utilities).",
+        "Both host and participant are routed into the same 1:1 call for that scheduled session."
+      ]
+    },
+    {
+      "id": "REQ-18",
+      "text": "Connect scheduled sessions to the existing WebRTC signaling/call flow so that calls are created between two distinct authenticated users (not self-calls) when a scheduled session starts/joined.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "recent-4",
+          "recent-8",
+          "recent-11"
+        ],
+        "quotes": [
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend provides a way to associate a scheduled session with a call (e.g., create call on join, or create on host start) so both parties converge on the same callId.",
+        "Frontend Live Class no longer initiates calls by setting callee to the caller’s own principal for the scheduled-session path; instead it uses the real other participant derived from the scheduled session join state.",
+        "A user opening a scheduled session join link after both parties are associated can reliably connect (with the existing polling-based signaling hooks)."
+      ]
+    },
+    {
+      "id": "REQ-19",
+      "text": "Update the Skill Match booking flow to schedule real backend sessions (instead of only adding mock local sessions), while keeping user-facing text in English and preserving existing navigation patterns.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "recent-4",
+          "recent-8",
+          "recent-11"
+        ],
+        "quotes": [
+          "can i also make sessions and someone can join my sessions on that time",
+          "yes please create a full fledge final working website",
+          "yes"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Clicking “Book a Session” results in a backend scheduled session being created (using user-selected schedule details or a minimal scheduling UI) and then appears on the Dashboard upcoming sessions list.",
+        "If the match target cannot be a real principal in the current mock data, the booking flow still results in a shareable join link that another authenticated user can use to join the scheduled session.",
+        "The old localStorage-based session list does not conflict with the backend-based list (either removed from the main UX path or clearly separated as demo-only)."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add migration.mo if state upgrade requires it.",
-    "Do not add third-party authentication; continue using Internet Identity.",
-    "Do not use WebSockets/Socket.io or external real-time infrastructure; use canister calls and polling for signaling.",
-    "Do not modify files under frontend/src/components/ui or any other frontend.immutablePaths (compose existing components instead)."
+    "Backend must remain a single Motoko actor with all logic in `backend/main.mo`; only add `backend/migration.mo` changes if state upgrades require it (conditional migration policy).",
+    "Do not modify any files under `frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useInternetIdentity.tsx`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`, or anything in `frontend/src/components/ui`; compose existing components instead.",
+    "Use Internet Identity for authentication; no third-party auth providers.",
+    "No WebSockets/real-time servers; rely on existing polling/React Query patterns for signaling and session state."
   ],
   "nonGoals": [
-    "Group calls (more than 2 participants).",
-    "Call recording, screen sharing, or text chat.",
-    "Integration with external video providers/SDKs."
+    "Implementing group sessions (more than 2 participants).",
+    "Adding push notifications, email/SMS reminders, or calendar integrations.",
+    "Implementing external databases or non-Internet-Computer backend services."
   ],
   "imageRequirements": {
     "required": [],
