@@ -10,6 +10,18 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface Call {
+  'status' : CallStatus,
+  'offer' : [] | [string],
+  'answer' : [] | [string],
+  'callee' : Principal,
+  'caller' : Principal,
+  'callerIceCandidates' : Array<string>,
+  'calleeIceCandidates' : Array<string>,
+}
+export type CallStatus = { 'initiated' : null } |
+  { 'answered' : null } |
+  { 'ended' : null };
 export interface Feedback {
   'comment' : string,
   'sessionId' : bigint,
@@ -26,11 +38,16 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'addIceCandidate' : ActorMethod<[bigint, string], undefined>,
+  'answerCall' : ActorMethod<[bigint, string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'createUserProfile' : ActorMethod<[string, Array<string>], undefined>,
+  'endCall' : ActorMethod<[bigint], undefined>,
+  'getActiveCall' : ActorMethod<[], [] | [Call]>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'initiateCall' : ActorMethod<[Principal, string], bigint>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'startSession' : ActorMethod<[], bigint>,

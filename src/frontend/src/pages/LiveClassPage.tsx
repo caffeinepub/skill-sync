@@ -1,24 +1,70 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Video, Play, Pause, Clock } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Clock, AlertCircle } from 'lucide-react';
 import StarRating from '../components/feedback/StarRating';
+import VideoCallPanel from '../components/liveclass/VideoCallPanel';
+import JoinLinkBox from '../components/liveclass/JoinLinkBox';
 import { useSessionTimer } from '../hooks/useSessionTimer';
 import { calculateCredits } from '../utils/creditCalculation';
 import { useStartSession, useSubmitFeedback } from '../hooks/useQueries';
+import {
+  useInitiateCall,
+  useGetActiveCall,
+  useAnswerCall,
+  useAddIceCandidate,
+  useEndCall,
+} from '../hooks/useCallSignaling';
 import { toast } from 'sonner';
 import { useNavigate } from '@tanstack/react-router';
+import { getPersistedUrlParameter, clearSessionParameter } from '../utils/urlParams';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 
 export default function LiveClassPage() {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [sessionId, setSessionId] = useState<bigint | null>(null);
+  const [callId, setCallId] = useState<bigint | null>(null);
+  const [isInitiator, setIsInitiator] = useState(false);
+  const [joinCallId, setJoinCallId] = useState<string | null>(null);
+
   const { elapsedSeconds, isRunning, start, stop, reset } = useSessionTimer();
+  const { identity } = useInternetIdentity();
   const startSession = useStartSession();
   const submitFeedback = useSubmitFeedback();
+  const initiateCall = useInitiateCall();
+  const { data: activeCall, isLoading: isLoadingCall } = useGetActiveCall();
+  const answerCall = useAnswerCall();
+  const addIceCandidate = useAddIceCandidate();
+  const endCall = useEndCall();
   const navigate = useNavigate();
+
+  // Check for callId in URL on mount
+  useEffect(() => {
+    const urlCallId = getPersistedUrlParameter('callId');
+    if (urlCallId) {
+      setJoinCallId(urlCallId);
+    }
+  }, []);
+
+  // Auto-join mode when callId is present
+  useEffect(() => {
+    if (joinCallId && !callId && activeCall && !isLoadingCall) {
+      // Verify the call exists and we're part of it
+      const myPrincipal = identity?.getPrincipal().toString();
+      const isParticipant = 
+        activeCall.caller.toString() === myPrincipal ||
+        activeCall.callee.toString() === myPrincipal;
+
+      if (isParticipant) {
+        setCallId(BigInt(joinCallId));
+        setIsInitiator(activeCall.caller.toString() === myPrincipal);
+      }
+    }
+  }, [joinCallId, callId, activeCall, isLoadingCall, identity]);
 
   const handleStartSession = async () => {
     try {
@@ -35,6 +81,73 @@ export default function LiveClassPage() {
   const handleStopSession = () => {
     stop();
     toast.info('Session paused');
+  };
+
+  const handleStartCall = async (offer: string) => {
+    try {
+      // For demo purposes, we're calling ourselves (in production, you'd specify a real callee)
+      const myPrincipal = identity?.getPrincipal().toString();
+      if (!myPrincipal) {
+        toast.error('Not authenticated');
+        return;
+      }
+
+      const newCallId = await initiateCall.mutateAsync({
+        callee: myPrincipal,
+        offer,
+      });
+
+      setCallId(newCallId);
+      setIsInitiator(true);
+      toast.success('Call initiated! Share the link below.');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to start call');
+      console.error('Start call error:', error);
+    }
+  };
+
+  const handleAnswerCall = async (answer: string) => {
+    if (!callId) return;
+
+    try {
+      await answerCall.mutateAsync({ callId, answer });
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to answer call');
+      console.error('Answer call error:', error);
+    }
+  };
+
+  const handleIceCandidate = async (candidate: string) => {
+    if (!callId) return;
+
+    try {
+      await addIceCandidate.mutateAsync({ callId, candidate });
+    } catch (error) {
+      console.warn('Failed to send ICE candidate:', error);
+    }
+  };
+
+  const handleEndCall = async () => {
+    if (!callId) return;
+
+    try {
+      await endCall.mutateAsync(callId);
+      setCallId(null);
+      setIsInitiator(false);
+      clearSessionParameter('callId');
+      setJoinCallId(null);
+      toast.info('Call ended');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to end call');
+      console.error('End call error:', error);
+    }
+  };
+
+  const handleStartNewCall = () => {
+    clearSessionParameter('callId');
+    setJoinCallId(null);
+    setCallId(null);
+    setIsInitiator(false);
   };
 
   const handleSubmitFeedback = async () => {
@@ -59,7 +172,7 @@ export default function LiveClassPage() {
         rating: BigInt(rating),
         comment: comment.trim(),
       });
-      
+
       toast.success('Feedback submitted successfully!');
       reset();
       setRating(0);
@@ -75,6 +188,21 @@ export default function LiveClassPage() {
   const durationMinutes = Math.floor(elapsedSeconds / 60);
   const credits = calculateCredits(durationMinutes, rating);
 
+  // Determine connection status message
+  let connectionStatus = 'Not connected';
+  if (callId && activeCall) {
+    if (activeCall.status === 'initiated' && !activeCall.answer) {
+      connectionStatus = isInitiator ? 'Waiting for peer to join...' : 'Connecting...';
+    } else if (activeCall.status === 'answered' || activeCall.answer) {
+      connectionStatus = 'Connecting...';
+    } else if (activeCall.status === 'ended') {
+      connectionStatus = 'Call ended';
+    }
+  }
+
+  // Show error if invalid/expired callId
+  const showInvalidCallError = joinCallId && !isLoadingCall && !activeCall;
+
   return (
     <div className="space-y-8 max-w-5xl mx-auto">
       <div>
@@ -82,30 +210,41 @@ export default function LiveClassPage() {
         <p className="text-muted-foreground">Connect, learn, and earn credits</p>
       </div>
 
+      {/* Invalid Call Error */}
+      {showInvalidCallError && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-center justify-between">
+            <span>This call link is invalid or has expired.</span>
+            <Button
+              onClick={handleStartNewCall}
+              variant="outline"
+              size="sm"
+            >
+              Start New Call
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Video Placeholder */}
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Video className="h-5 w-5" />
-              Video Session
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="aspect-video bg-gradient-to-br from-blue-500/20 to-purple-500/20 rounded-lg flex items-center justify-center border-2 border-dashed border-border">
-              <div className="text-center space-y-4">
-                <Video className="h-16 w-16 mx-auto text-muted-foreground" />
-                <p className="text-muted-foreground">Video call interface placeholder</p>
-                <p className="text-sm text-muted-foreground">
-                  Real video integration would appear here
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Video Call Panel */}
+        <VideoCallPanel
+          callId={callId}
+          activeCall={activeCall || null}
+          isInitiator={isInitiator}
+          onStartCall={handleStartCall}
+          onAnswerCall={handleAnswerCall}
+          onIceCandidate={handleIceCandidate}
+          onEndCall={handleEndCall}
+          connectionStatus={connectionStatus}
+        />
 
         {/* Timer & Credits */}
         <div className="space-y-6">
+          {/* Join Link Box */}
+          {callId && isInitiator && <JoinLinkBox callId={callId} />}
+
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -125,18 +264,16 @@ export default function LiveClassPage() {
               </div>
               <div className="flex gap-2">
                 {!isRunning ? (
-                  <Button 
-                    onClick={handleStartSession} 
+                  <Button
+                    onClick={handleStartSession}
                     className="flex-1"
                     disabled={startSession.isPending}
                   >
-                    <Play className="h-4 w-4 mr-2" />
-                    Start
+                    Start Timer
                   </Button>
                 ) : (
                   <Button onClick={handleStopSession} variant="outline" className="flex-1">
-                    <Pause className="h-4 w-4 mr-2" />
-                    Pause
+                    Pause Timer
                   </Button>
                 )}
               </div>
@@ -196,7 +333,7 @@ export default function LiveClassPage() {
             />
           </div>
 
-          <Button 
+          <Button
             onClick={handleSubmitFeedback}
             disabled={!sessionId || rating === 0 || !comment.trim() || submitFeedback.isPending}
             className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"

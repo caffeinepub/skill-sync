@@ -1,198 +1,99 @@
 {
   "kind": "build_request",
-  "title": "Build Skill Sync responsive multi-page UI with auth, credits, feedback, and dark mode",
+  "title": "Enable real 1:1 video calls in Live Class (WebRTC with IC-based signaling)",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Create a responsive app shell with a modern navbar that includes the “Skill Sync” logo, primary navigation (Home, Skill Match, Dashboard), and Login/Logout entry points.",
+      "id": "REQ-10",
+      "text": "Replace the Live Class page’s video placeholder with a working 1:1 in-browser video call experience that can connect two authenticated users.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-5"
         ],
         "quotes": [
-          "Modern navbar with logo",
-          "Pages Required: 1) Home Page ... 2) Dashboard Page ... 4) Skill Match Page",
-          "Functional Requirements:\n- Login / Signup UI"
+          "i  want that this will connect two persons via video calls"
         ]
       },
       "acceptanceCriteria": [
-        "Navbar renders on all pages and collapses appropriately on mobile (e.g., hamburger menu).",
-        "Logo text reads “Skill Sync” and is consistently styled.",
-        "Navigation highlights the active page and routes work without full page reloads."
+        "On /live-class, the UI shows the local video preview and a remote video area (when connected).",
+        "The page provides call controls at minimum: Start/Join call, End call, and clear connection status text (e.g., “Waiting for peer…”, “Connecting…”, “Connected”, “Disconnected”).",
+        "The existing session timer and feedback/credits UI remain functional and usable alongside the video UI.",
+        "If camera/microphone permission is denied/unavailable, the UI shows a clear error message and does not crash."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Implement a Home page with: hero heading “Learn. Teach. Earn. Grow Together.”, a short subheading explaining the peer-to-peer skill exchange concept, CTA buttons (“Start Learning”, “Start Teaching”), a Features section (Live Classes, Credit System, Smart Matching, Doubt Solving), a 3-step “How It Works” section with icons, a Testimonials section, and a Footer with social links and contact info.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Home Page\n- Hero section with heading:\n  \"Learn. Teach. Earn. Grow Together.\"\n- Subheading explaining skill exchange concept\n- Call-to-action buttons: \"Start Learning\" and \"Start Teaching\"\n- Features section (Live Classes, Credit System, Smart Matching, Doubt Solving)\n- How It Works (3 step section with icons)\n- Testimonials section\n- Footer with social links and contact info"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All listed Home sections are present, visually distinct, and responsive.",
-        "CTA buttons are clickable and route users to appropriate pages (e.g., Skill Match for learning and Dashboard for teaching) or prompt login if required.",
-        "Footer includes at least: an email contact, and 2–3 social link placeholders."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Create Login and Signup UI flows using Internet Identity for authentication; treat “Signup” as first-time profile setup after a successful Internet Identity login (collect name and skills).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Functional Requirements:\n- Login / Signup UI"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Login button triggers Internet Identity authentication and results in an authenticated session in the UI.",
-        "Signup screen is reachable for first-time users and allows saving a basic profile (name + skills).",
-        "Authenticated state is reflected in the navbar (e.g., shows user menu and Logout)."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Create a Dashboard page (post-login) with: profile section (Name, Skills, Credits), “Book a Session” button, upcoming sessions list, earned credits display, and feedback ratings summary (1–5 stars).",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Dashboard Page (After Login)\n- Profile section (Name, Skills, Credits)\n- Book a Session button\n- Upcoming sessions\n- Earned credits display\n- Feedback ratings"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Dashboard requires login; unauthenticated users are redirected to Login.",
-        "Profile shows name, a skills list/chips, and a numeric credits balance.",
-        "Upcoming sessions list renders with at least: skill/topic, partner name (or placeholder), date/time, and status.",
-        "Feedback ratings are displayed as star visuals (1–5) with an average rating."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Create a Skill Match page with a search bar, a set of skill categories (including Coding, Design, Music, Language), and match cards that show rating and credit cost, plus an action to request/book a session.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Skill Match Page\n- Search bar\n- Skill categories (Coding, Design, Music, Language, etc.)\n- Match cards with ratings and credit cost"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Search filters match cards by name/skill text (client-side is acceptable).",
-        "Category selection filters the visible match cards.",
-        "Each match card displays: user/mentor name placeholder, skill(s), star rating, and a credit cost value.",
-        "Clicking “Book/Request Session” prompts login if not authenticated, otherwise leads to a booking flow or creates an upcoming session entry."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Create a Live Class page UI with: a video call placeholder area, a session duration timer, a feedback submission form (1–5 stars + comment), and a credit calculation display based on session duration and feedback rating.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-2"
-        ],
-        "quotes": [
-          "Live Class Page\n- Video call UI placeholder\n- Timer showing session duration\n- Feedback submission form\n- Credit calculation display",
-          "Functional Requirements:\n- Credit points system display\n- Feedback rating system (1–5 stars)"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Live class page shows a clearly labeled video placeholder region (no real video integration required).",
-        "Timer can be started/stopped for a session and displays elapsed time in a readable format.",
-        "Feedback form allows selecting 1–5 stars and entering a comment; submission persists to backend for the session.",
-        "Credit calculation display updates based on timer duration and selected rating and shows the resulting credits earned/spent."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Implement backend data models and API endpoints in the single Motoko actor to support: user profile (name, skills, credits), sessions (create/list/update status), feedback (store rating/comment linked to a session), and a deterministic credit calculation function based on duration and rating.",
+      "id": "REQ-11",
+      "text": "Implement 1:1 call signaling in the Motoko backend actor to allow two peers to exchange WebRTC offers/answers and ICE candidates via the canister (no third-party video SDK).",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-5"
         ],
         "quotes": [
-          "earn credit points based on feedback and session duration, and use those credits to learn new skills",
-          "Functional Requirements:\n- Credit points system display\n- Feedback rating system (1–5 stars)"
+          "i  want that this will connect two persons via video calls"
         ]
       },
       "acceptanceCriteria": [
-        "Backend exposes methods to: get/create/update the current user profile; list upcoming sessions for the current user; create a session request/booking; submit feedback for a session; compute credits earned/spent.",
-        "Credit calculation is deterministic and returns the same result for the same duration + rating inputs.",
-        "API methods enforce that only the authenticated principal can mutate its own profile/sessions/feedback."
+        "Backend exposes an API to: create a new call (returns a callId), join an existing call by callId, send signaling messages (offer/answer/ICE) to the other participant, poll/fetch pending signaling messages, and end/cleanup a call.",
+        "A call is limited to exactly 2 distinct participants; a third user attempting to join is rejected with a clear error.",
+        "Only authenticated users (with the existing user permission model) can create/join/send signaling messages.",
+        "Signaling messages are delivered only to the intended other participant (no public leakage).",
+        "Calls are cleaned up on explicit end and/or via a reasonable TTL to avoid unbounded growth of in-canister state."
       ]
     },
     {
-      "id": "REQ-8",
-      "text": "Apply a clean, youth-focused visual design across all pages with a soft blue+purple gradient background, card-based layout, modern typography, and smooth hover/transition animations for buttons, cards, and navigation.",
+      "id": "REQ-12",
+      "text": "Add a simple, shareable “join link” flow so two people can reliably meet in the same 1:1 call without needing user search.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-5"
         ],
         "quotes": [
-          "Design Requirements:\n- Clean, modern UI\n- Youth-focused design\n- Soft gradient background (blue + purple)\n- Smooth animations and hover effects",
-          "Functional Requirements:\n- Clean card-based layout",
-          "Add smooth animations and modern UI components."
+          "i  want that this will connect two persons via video calls"
         ]
       },
       "acceptanceCriteria": [
-        "All primary surfaces use a consistent card style (spacing, radius, shadow) and look cohesive across pages.",
-        "Gradient background is present and does not reduce text readability (adequate contrast).",
-        "Interactive components (buttons/cards/nav links) have visible hover/focus states and smooth transitions.",
-        "Layout is responsive and usable on mobile, tablet, and desktop breakpoints."
+        "When a user starts a call, the UI displays a shareable link that includes the callId (e.g., /live-class?callId=...).",
+        "When a user opens /live-class with a callId present, the page automatically enters “join” mode and attempts to connect to the call.",
+        "The user can copy the link via a button and receives a confirmation toast/message that it was copied.",
+        "Invalid/expired callId shows a clear error state and offers a way to start a new call."
       ]
     },
     {
-      "id": "REQ-9",
-      "text": "Add a dark mode option with a theme toggle that persists the user’s preference and updates the gradient/background and component colors appropriately.",
+      "id": "REQ-13",
+      "text": "Integrate frontend data-flow for signaling using the existing actor/React Query patterns, without modifying immutable hook files, and ensure the call connection state is resilient to refreshes/navigation.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-2"
+          "msg-5"
         ],
         "quotes": [
-          "Functional Requirements:\n- Dark mode option"
+          "i  want that this will connect two persons via video calls"
         ]
       },
       "acceptanceCriteria": [
-        "Theme toggle is accessible from the navbar (or equivalent global location).",
-        "Theme choice persists across refreshes (e.g., local storage) and applies on initial load.",
-        "Dark mode maintains readability and consistent styling for cards, text, and controls."
+        "Frontend uses the existing backend actor (via existing app patterns) to create/join calls and exchange signaling messages.",
+        "Signaling receive is implemented using polling (React Query refetch interval or equivalent), since real-time sockets are not available.",
+        "Refreshing the page in a call with a valid callId keeps the page in join mode and attempts to reconnect (while clearly indicating the current state).",
+        "No changes are requested to any paths listed in frontend.immutablePaths."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor (no multi-canister backend design).",
-    "Do not edit files under frontend/src/components/ui or other immutable template paths; only compose them.",
-    "Use English for all user-facing text."
+    "Backend must remain a single Motoko actor (all logic in backend/main.mo); only add migration.mo if state upgrade requires it.",
+    "Do not add third-party authentication; continue using Internet Identity.",
+    "Do not use WebSockets/Socket.io or external real-time infrastructure; use canister calls and polling for signaling.",
+    "Do not modify files under frontend/src/components/ui or any other frontend.immutablePaths (compose existing components instead)."
   ],
   "nonGoals": [
-    "Implementing real video calling or live streaming on the Live Class page (placeholder UI only).",
-    "Real-time chat, WebSockets, or push notifications.",
-    "External database integrations or third-party authentication providers beyond Internet Identity.",
-    "A production-grade smart matching algorithm; basic filtering and placeholder match data are sufficient."
+    "Group calls (more than 2 participants).",
+    "Call recording, screen sharing, or text chat.",
+    "Integration with external video providers/SDKs."
   ],
   "imageRequirements": {
-    "required": [
-      "Modern minimal wordmark logo reading “Skill Sync” on transparent background (skill-sync-logo.dim_512x512.png)",
-      "Abstract soft gradient background with subtle shapes, blue-to-purple, no text (skillsync-bg.dim_1920x1080.png)",
-      "Set of 4 minimal line icons (live class, credits, matching, doubt solving) in a consistent style (skillsync-icons-sprite.dim_1024x256.png)"
-    ],
+    "required": [],
     "edits": []
   }
 }

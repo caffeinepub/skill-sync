@@ -13,6 +13,20 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const CallStatus = IDL.Variant({
+  'initiated' : IDL.Null,
+  'answered' : IDL.Null,
+  'ended' : IDL.Null,
+});
+export const Call = IDL.Record({
+  'status' : CallStatus,
+  'offer' : IDL.Opt(IDL.Text),
+  'answer' : IDL.Opt(IDL.Text),
+  'callee' : IDL.Principal,
+  'caller' : IDL.Principal,
+  'callerIceCandidates' : IDL.Vec(IDL.Text),
+  'calleeIceCandidates' : IDL.Vec(IDL.Text),
+});
 export const Feedback = IDL.Record({
   'comment' : IDL.Text,
   'sessionId' : IDL.Nat,
@@ -27,8 +41,12 @@ export const UserProfile = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'addIceCandidate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+  'answerCall' : IDL.Func([IDL.Nat, IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'createUserProfile' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
+  'endCall' : IDL.Func([IDL.Nat], [], []),
+  'getActiveCall' : IDL.Func([], [IDL.Opt(Call)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getUserProfile' : IDL.Func(
@@ -36,6 +54,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'initiateCall' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Nat], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'startSession' : IDL.Func([], [IDL.Nat], []),
@@ -49,6 +68,20 @@ export const idlFactory = ({ IDL }) => {
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
+  });
+  const CallStatus = IDL.Variant({
+    'initiated' : IDL.Null,
+    'answered' : IDL.Null,
+    'ended' : IDL.Null,
+  });
+  const Call = IDL.Record({
+    'status' : CallStatus,
+    'offer' : IDL.Opt(IDL.Text),
+    'answer' : IDL.Opt(IDL.Text),
+    'callee' : IDL.Principal,
+    'caller' : IDL.Principal,
+    'callerIceCandidates' : IDL.Vec(IDL.Text),
+    'calleeIceCandidates' : IDL.Vec(IDL.Text),
   });
   const Feedback = IDL.Record({
     'comment' : IDL.Text,
@@ -64,8 +97,12 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'addIceCandidate' : IDL.Func([IDL.Nat, IDL.Text], [], []),
+    'answerCall' : IDL.Func([IDL.Nat, IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'createUserProfile' : IDL.Func([IDL.Text, IDL.Vec(IDL.Text)], [], []),
+    'endCall' : IDL.Func([IDL.Nat], [], []),
+    'getActiveCall' : IDL.Func([], [IDL.Opt(Call)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getUserProfile' : IDL.Func(
@@ -73,6 +110,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'initiateCall' : IDL.Func([IDL.Principal, IDL.Text], [IDL.Nat], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'startSession' : IDL.Func([], [IDL.Nat], []),

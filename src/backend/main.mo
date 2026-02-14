@@ -1,12 +1,15 @@
 import Map "mo:core/Map";
 import Time "mo:core/Time";
+import Runtime "mo:core/Runtime";
 import List "mo:core/List";
 import Timer "mo:core/Timer";
+import Array "mo:core/Array";
 import Principal "mo:core/Principal";
-import Runtime "mo:core/Runtime";
+import Migration "migration";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
 
+(with migration = Migration.run)
 actor {
   public type UserProfile = {
     name : Text;
@@ -34,15 +37,35 @@ actor {
     startTime : Int;
   };
 
+  public type CallStatus = {
+    #initiated;
+    #answered;
+    #ended;
+  };
+
+  public type Call = {
+    caller : Principal;
+    callee : Principal;
+    status : CallStatus;
+    offer : ?Text;
+    answer : ?Text;
+    callerIceCandidates : [Text];
+    calleeIceCandidates : [Text];
+  };
+
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
 
   var nextSessionId = 1;
+  var nextCallId = 1;
   let userProfiles = Map.empty<Principal, UserProfile>();
   let sessions = Map.empty<Nat, Session>();
   let timedSessions = Map.empty<Nat, TimedSession>();
+  let calls = Map.empty<Nat, Call>();
+  let userActiveCalls = Map.empty<Principal, Nat>();
 
-  // Get caller's own profile
+  // User profile management
+
   public query ({ caller }) func getCallerUserProfile() : async ?UserProfile {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can view profiles");
@@ -50,7 +73,6 @@ actor {
     userProfiles.get(caller);
   };
 
-  // Get any user's profile (own or admin viewing others)
   public query ({ caller }) func getUserProfile(user : Principal) : async ?UserProfile {
     if (caller != user and not AccessControl.isAdmin(accessControlState, caller)) {
       Runtime.trap("Unauthorized: Can only view your own profile");
@@ -58,7 +80,6 @@ actor {
     userProfiles.get(user);
   };
 
-  // Save/update caller's profile
   public shared ({ caller }) func saveCallerUserProfile(profile : UserProfile) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can save profiles");
@@ -66,7 +87,6 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Create user profile (first-time setup)
   public shared ({ caller }) func createUserProfile(name : Text, skills : [Text]) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can create profiles");
@@ -85,7 +105,8 @@ actor {
     };
   };
 
-  // Start a live session with timer
+  // Session management
+
   public shared ({ caller }) func startSession() : async Nat {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can start sessions");
@@ -101,8 +122,10 @@ actor {
       isActive = true;
     };
 
-    // Set timer for 60 seconds
-    let timerId = Timer.setTimer<system>(#seconds 60, func() : async () { await completeSession(sessionId) });
+    let timerId = Timer.setTimer<system>(
+      #seconds 60,
+      func() : async () { await completeSession(sessionId) },
+    );
 
     let timedSession : TimedSession = {
       session;
@@ -115,7 +138,6 @@ actor {
     sessionId;
   };
 
-  // Complete session after timer ends
   func completeSession(sessionId : Nat) : async () {
     switch (timedSessions.get(sessionId)) {
       case (?timedSession) {
@@ -132,7 +154,8 @@ actor {
     };
   };
 
-  // Submit feedback for session and calculate credits
+  // Remaining session methods...
+
   public shared ({ caller }) func submitFeedback(sessionId : Nat, rating : Nat, comment : Text) : async () {
     if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
       Runtime.trap("Unauthorized: Only users can submit feedback");
@@ -140,7 +163,6 @@ actor {
 
     switch (sessions.get(sessionId)) {
       case (?session) {
-        // Verify ownership: only the session owner can submit feedback
         if (session.user != caller) {
           Runtime.trap("Unauthorized: Can only submit feedback for your own sessions");
         };
@@ -172,6 +194,127 @@ actor {
         };
       };
       case (null) { Runtime.trap("Session not found") };
+    };
+  };
+
+  // WebRTC call signaling
+
+  public shared ({ caller }) func initiateCall(callee : Principal, offer : Text) : async Nat {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can initiate calls");
+    };
+
+    if (caller == callee) {
+      Runtime.trap("Cannot call yourself");
+    };
+
+    let callId = nextCallId;
+    nextCallId += 1;
+
+    let call : Call = {
+      caller;
+      callee;
+      status = #initiated;
+      offer = ?offer;
+      answer = null;
+      callerIceCandidates = [];
+      calleeIceCandidates = [];
+    };
+
+    calls.add(callId, call);
+    userActiveCalls.add(caller, callId);
+    userActiveCalls.add(callee, callId);
+
+    callId;
+  };
+
+  public query ({ caller }) func getActiveCall() : async ?Call {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can view calls");
+    };
+
+    switch (userActiveCalls.get(caller)) {
+      case (?callId) {
+        calls.get(callId);
+      };
+      case (null) { null };
+    };
+  };
+
+  public shared ({ caller }) func answerCall(callId : Nat, answer : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can answer calls");
+    };
+
+    switch (calls.get(callId)) {
+      case (?existingCall) {
+        if (existingCall.callee != caller) {
+          Runtime.trap("Unauthorized: Only the callee can answer this call");
+        };
+
+        if (existingCall.status != #initiated) {
+          Runtime.trap("Call has already been answered or ended");
+        };
+
+        let updatedCall = {
+          existingCall with
+          answer = ?answer;
+          status = #answered;
+        };
+        calls.add(callId, updatedCall);
+      };
+      case (null) { Runtime.trap("Call not found") };
+    };
+  };
+
+  public shared ({ caller }) func addIceCandidate(callId : Nat, candidate : Text) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can send ICE candidates");
+    };
+
+    switch (calls.get(callId)) {
+      case (?existingCall) {
+        let updatedCall = if (existingCall.caller == caller) {
+          {
+            existingCall with
+            callerIceCandidates = existingCall.callerIceCandidates.concat([candidate]);
+          };
+        } else if (existingCall.callee == caller) {
+          {
+            existingCall with
+            calleeIceCandidates = existingCall.calleeIceCandidates.concat([candidate]);
+          };
+        } else {
+          Runtime.trap("Unauthorized: Only call participants can submit ICE candidates");
+        };
+
+        calls.add(callId, updatedCall);
+      };
+      case (null) { Runtime.trap("Call not found") };
+    };
+  };
+
+  public shared ({ caller }) func endCall(callId : Nat) : async () {
+    if (not (AccessControl.hasPermission(accessControlState, caller, #user))) {
+      Runtime.trap("Unauthorized: Only users can end calls");
+    };
+
+    switch (calls.get(callId)) {
+      case (?existingCall) {
+        if (existingCall.caller != caller and existingCall.callee != caller) {
+          Runtime.trap("Unauthorized: Only call participants can end the call");
+        };
+
+        let updatedCall = {
+          existingCall with
+          status = #ended;
+        };
+        calls.add(callId, updatedCall);
+
+        userActiveCalls.remove(existingCall.caller);
+        userActiveCalls.remove(existingCall.callee);
+      };
+      case (null) { Runtime.trap("Call not found") };
     };
   };
 };

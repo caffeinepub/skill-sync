@@ -1,13 +1,13 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
-  "summary": "Build a modern, responsive website for “Skill Sync”, a student peer-to-peer skill exchange platform with core pages (Home, Dashboard, Live Class, Skill Match) and UI features like auth screens, credit/feedback displays, animations, and optional dark mode.",
+  "projectStateVersion": 5,
+  "summary": "Build a modern, responsive website for “Skill Sync”, a student peer-to-peer skill exchange platform with core pages (Home, Dashboard, Live Class, Skill Match) and UI features like auth screens, credit/feedback displays, animations, optional dark mode, and support for real two-person video calls (not just a placeholder).",
   "architectural_notes": [
-    "Frontend-only site requested using HTML/CSS/JavaScript (React optional); backend functionality not specified, so auth/credits/feedback are primarily UI/display."
+    "Frontend-only site requested using HTML/CSS/JavaScript (React optional); backend functionality not specified, so auth/credits/feedback are primarily UI/display.",
+    "Real 1:1 video calling will require WebRTC (or a video SDK) plus signaling/room coordination; this goes beyond the current UI-only placeholder."
   ],
   "known_issues": [],
   "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Modern minimal wordmark logo reading “Skill Sync” on transparent background (skill-sync-logo.dim_512x512.png)\n- Abstract soft gradient background with subtle shapes, blue-to-purple, no text (skillsync-bg.dim_1920x1080.png)\n- Set of 4 minimal line icons (live class, credits, matching, doubt solving) in a consistent style (skillsync-icons-sprite.dim_1024x256.png)",
   "existing_features": [
     {
       "id": "feature-create-a-responsive-app-shell-with-a-modern-navbar-that-includes-the-skill-sync-logo-primary-navigation-home-skill-match-dashboard-and-login-logout-entry-points",
@@ -70,6 +70,30 @@
       "title": "Add a dark mode option with a theme toggle that persists the user’s preference and updates the gradient/background and component colors appropriately.",
       "reqIds": [
         "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-replace-the-live-class-page-s-video-placeholder-with-a-working-1-1-in-browser-video-call-experience-that-can-connect-two-authenticated-users",
+      "title": "Replace the Live Class page’s video placeholder with a working 1:1 in-browser video call experience that can connect two authenticated users.",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-simple-shareable-join-link-flow-so-two-people-can-reliably-meet-in-the-same-1-1-call-without-needing-user-search",
+      "title": "Add a simple, shareable “join link” flow so two people can reliably meet in the same 1:1 call without needing user search.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-integrate-frontend-data-flow-for-signaling-using-the-existing-actor-react-query-patterns-without-modifying-immutable-hook-files-and-ensure-the-call-connection-state-is-resilient-to-refreshes-navigation",
+      "title": "Integrate frontend data-flow for signaling using the existing actor/React Query patterns, without modifying immutable hook files, and ensure the call connection state is resilient to refreshes/navigation.",
+      "reqIds": [
+        "REQ-13"
       ],
       "version": 1
     }
@@ -140,6 +164,20 @@
       "summary": "Implement backend data models and API endpoints in the single Motoko actor to support: user profile (name, skills, credits), sessions (create/list/update status), feedback (store rating/comment linked to a session), and a deterministic credit calculation function based on duration and rating.",
       "reqIds": [
         "REQ-7"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-18",
+      "summary": "Enable real 1:1 video calls between two users in the Live Class page (replace placeholder with working video connection)",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-20",
+      "summary": "Implement 1:1 call signaling in the Motoko backend actor to allow two peers to exchange WebRTC offers/answers and ICE candidates via the canister (no third-party video SDK).",
+      "reqIds": [
+        "REQ-11"
       ],
       "status": "pending"
     }

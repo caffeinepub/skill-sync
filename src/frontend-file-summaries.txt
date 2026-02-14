@@ -16,11 +16,16 @@
   "frontend/src/pages/SignupProfilePage.tsx": "First-time profile setup page for collecting user name and skills after Internet Identity authentication.",
   "frontend/src/pages/DashboardPage.tsx": "User dashboard displaying profile overview (credits, skills, ratings), quick actions, upcoming sessions, and recent feedback.",
   "frontend/src/pages/SkillMatchPage.tsx": "Skill matching page with search, category filters, and match cards for finding and booking learning sessions with peers.",
-  "frontend/src/pages/LiveClassPage.tsx": "Live class session page with video placeholder, session timer, feedback form, and real-time credit calculation display.",
+  "frontend/src/pages/LiveClassPage.tsx": "Live class session page with integrated WebRTC video calling, shareable join links, auto-join mode via URL callId parameter, session timer, feedback form, and credit calculation display.",
   "frontend/src/hooks/useQueries.ts": "React Query hooks for backend operations including profile management, session creation, and feedback submission with proper cache invalidation.",
   "frontend/src/hooks/useSessionTimer.ts": "Custom hook for managing session timer state with start, stop, and reset functionality using setInterval.",
   "frontend/src/hooks/useSessionsLocal.ts": "Custom hook for managing upcoming sessions in localStorage, keyed by user principal for persistence across page reloads.",
   "frontend/src/utils/creditCalculation.ts": "Deterministic credit calculation utility function that computes credits earned based on session duration and feedback rating.",
   "frontend/src/index.css": "Global styles with OKLCH color system customized for blue-purple gradient theme in both light and dark modes, plus utility classes.",
-  "frontend/tailwind.config.js": "Tailwind configuration with extended color palette, custom border radius, Inter font family, and animation utilities for the youth-focused design."
+  "frontend/tailwind.config.js": "Tailwind configuration with extended color palette, custom border radius, Inter font family, and animation utilities for the youth-focused design.",
+  "frontend/src/hooks/useWebRTCPeer.ts": "Custom React hook that manages WebRTC peer connection lifecycle including local/remote streams, offer/answer creation, ICE candidate handling, and connection state management with proper cleanup and TypeScript-safe ref types.",
+  "frontend/src/hooks/useCallSignaling.ts": "React Query hooks for WebRTC signaling operations via backend actor including initiating calls, polling active call state, answering calls, sending ICE candidates, and ending calls.",
+  "frontend/src/components/liveclass/VideoCallPanel.tsx": "Video call UI component displaying local and remote video streams with call controls, connection status, error handling, and WebRTC peer integration for 1:1 video calls with proper null-safety checks for optional offer field.",
+  "frontend/src/components/liveclass/JoinLinkBox.tsx": "Reusable component that displays a shareable call join link with copy-to-clipboard functionality and call ID display.",
+  "frontend/src/utils/urlParams.ts": "Utility functions for parsing and managing URL parameters with support for hash-based routing, sessionStorage persistence, and callId handling for the Live Class join-link flow."
 }

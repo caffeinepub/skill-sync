@@ -1,277 +1,86 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Skill Sync responsive multi-page UI with auth, credits, feedback, and dark mode (frontend-only)",
+  "title": "1:1 WebRTC video calling on Live Class (frontend integration + join link + polling signaling)",
   "requirements": [
     {
-      "id": "REQ-1",
-      "summary": "Create a responsive app shell with a modern navbar (logo, primary nav, login/logout) present on all pages.",
+      "id": "REQ-10",
+      "summary": "Replace the /live-class video placeholder with a working 1:1 in-browser WebRTC call UI for two authenticated users, including local/remote video and basic call controls with robust permission/error handling.",
       "acceptanceCriteria": [
-        "Navbar renders on all pages and collapses appropriately on mobile (e.g., hamburger menu).",
-        "Logo text reads “Skill Sync” and is consistently styled.",
-        "Navigation highlights the active page and routes work without full page reloads."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "create",
-          "description": "Create the root app component that wires client-side routing for Home, Skill Match, Dashboard, Login, Signup (profile setup), and Live Class pages within a shared app shell layout."
-        },
-        {
-          "path": "frontend/src/components/layout/AppShell.tsx",
-          "operation": "create",
-          "description": "Implement the shared layout wrapper (background, navbar slot, footer slot, main content container) used by all routes. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/layout/Navbar.tsx",
-          "operation": "create",
-          "description": "Build a responsive navbar with the Skill Sync logo, nav links (Home, Skill Match, Dashboard) using active highlighting, and Login/Logout entry points; use shadcn-ui primitives (e.g., Button, Sheet/DropdownMenu) for mobile collapse and menus. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/auth/AuthButtons.tsx",
-          "operation": "create",
-          "description": "Create a small navbar-ready control that shows Login when unauthenticated and a user menu + Logout when authenticated; integrate with the existing Internet Identity hook and clear cached queries on logout. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/LoginPage.tsx",
-          "operation": "create",
-          "description": "Create a Login page that triggers Internet Identity login and provides a clear path back to the app after success (e.g., redirect to intended route)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "summary": "Implement the Home page sections (hero, CTAs, features, how-it-works, testimonials, footer) with responsive layout and routing CTAs.",
-      "acceptanceCriteria": [
-        "All listed Home sections are present, visually distinct, and responsive.",
-        "CTA buttons are clickable and route users to appropriate pages (e.g., Skill Match for learning and Dashboard for teaching) or prompt login if required.",
-        "Footer includes at least: an email contact, and 2–3 social link placeholders."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/HomePage.tsx",
-          "operation": "create",
-          "description": "Create the Home page with hero heading/subheading, two CTAs, features grid (Live Classes, Credit System, Smart Matching, Doubt Solving), 3-step How It Works with icons, testimonials, and a footer section; use shadcn-ui components (e.g., Button, Card) for card-based sections. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/marketing/FeaturesSection.tsx",
-          "operation": "create",
-          "description": "Create a reusable features grid that references the generated icon sprite for feature visuals and uses consistent card styling. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/marketing/HowItWorksSection.tsx",
-          "operation": "create",
-          "description": "Create a 3-step How It Works section with icon + title + description rows/cards, designed responsively. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/layout/Footer.tsx",
-          "operation": "create",
-          "description": "Create a footer component with contact email and 2–3 social link placeholders, styled consistently across themes."
-        },
-        {
-          "path": "frontend/public/assets/generated/skill-sync-logo.dim_512x512.png",
-          "operation": "create",
-          "description": "Add the generated logo asset to be used in the navbar and/or Home hero (static public asset)."
-        },
-        {
-          "path": "frontend/public/assets/generated/skillsync-bg.dim_1920x1080.png",
-          "operation": "create",
-          "description": "Add the generated abstract gradient background asset to be used for the global app shell background (static public asset)."
-        },
-        {
-          "path": "frontend/public/assets/generated/skillsync-icons-sprite.dim_1024x256.png",
-          "operation": "create",
-          "description": "Add the generated 4-icon sprite asset to be referenced by the Home Features and How It Works sections (static public asset)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Create Login + first-time Signup (profile setup) UI using Internet Identity and profile creation/saving in the UI.",
-      "acceptanceCriteria": [
-        "Login button triggers Internet Identity authentication and results in an authenticated session in the UI.",
-        "Signup screen is reachable for first-time users and allows saving a basic profile (name + skills).",
-        "Authenticated state is reflected in the navbar (e.g., shows user menu and Logout)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/hooks/useCurrentUserProfile.ts",
-          "operation": "create",
-          "description": "Add React Query hooks to load the current user's profile from the backend interface and to create/save the profile; follow the selected authorization component guidance to avoid first-time profile setup UI flash. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/SignupProfilePage.tsx",
-          "operation": "create",
-          "description": "Implement the first-time profile setup page shown after successful Internet Identity login when no profile exists; collect name and skills and call the backend interface to create/save profile; use shadcn-ui form primitives (e.g., Input, Button, Badge) for a polished UI. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/auth/RequireAuth.tsx",
-          "operation": "create",
-          "description": "Create a route guard wrapper that redirects unauthenticated users to the Login page and supports returning to the originally requested route after login."
-        },
-        {
-          "path": "frontend/src/components/auth/RequireProfile.tsx",
-          "operation": "create",
-          "description": "Create a wrapper that, once authenticated, ensures a user profile exists; if not, routes to the profile setup (Signup) flow."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Wire Login and Signup (profile setup) routes, and apply auth/profile guards to post-login sections (e.g., Dashboard, Live Class) while keeping public pages (Home, Skill Match) accessible."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Create a post-login Dashboard showing profile (name/skills/credits), booking CTA, upcoming sessions list, earned credits, and feedback star summary.",
-      "acceptanceCriteria": [
-        "Dashboard requires login; unauthenticated users are redirected to Login.",
-        "Profile shows name, a skills list/chips, and a numeric credits balance.",
-        "Upcoming sessions list renders with at least: skill/topic, partner name (or placeholder), date/time, and status.",
-        "Feedback ratings are displayed as star visuals (1–5) with an average rating."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "create",
-          "description": "Implement the Dashboard page using the current profile hook for Name/Skills/Credits, show a Book a Session CTA, render an upcoming sessions list (using stored local placeholder session data when backend session listing is not available), and compute/display a feedback ratings summary from profile feedback; use shadcn-ui components (Card, Button, Badge) for the card-based layout. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/feedback/StarRating.tsx",
-          "operation": "create",
-          "description": "Create a reusable 1–5 star visual component usable in read-only (average) and interactive (select rating) modes for Dashboard and Live Class. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useSessionsLocal.ts",
-          "operation": "create",
-          "description": "Add a small local persistence hook (e.g., localStorage keyed by principal) to track upcoming session entries created from the Skill Match booking action and shown in the Dashboard."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register the Dashboard route and wrap it with RequireAuth and RequireProfile so it is only accessible when logged in and the profile exists."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Create the Skill Match page with search, categories, match cards (rating, credit cost), and a booking action that respects auth state.",
-      "acceptanceCriteria": [
-        "Search filters match cards by name/skill text (client-side is acceptable).",
-        "Category selection filters the visible match cards.",
-        "Each match card displays: user/mentor name placeholder, skill(s), star rating, and a credit cost value.",
-        "Clicking “Book/Request Session” prompts login if not authenticated, otherwise leads to a booking flow or creates an upcoming session entry."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/SkillMatchPage.tsx",
-          "operation": "create",
-          "description": "Implement Skill Match page UI with a search bar, category filter chips (Coding, Design, Music, Language), and match cards showing placeholder mentor/user, skills, star rating, and credit cost; booking action should prompt login when unauthenticated and otherwise create a local upcoming session entry and optionally start a backend session then navigate to Live Class. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/match/MatchCard.tsx",
-          "operation": "create",
-          "description": "Create a reusable match card component that displays name placeholder, skills, rating stars, and credit cost, plus a Book/Request action button; built with shadcn-ui Card/Button. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register the Skill Match route and ensure navbar navigation points to it."
-        }
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "summary": "Create the Live Class page UI with video placeholder, timer, feedback submission, and credits calculation display tied to duration and rating.",
-      "acceptanceCriteria": [
-        "Live class page shows a clearly labeled video placeholder region (no real video integration required).",
-        "Timer can be started/stopped for a session and displays elapsed time in a readable format.",
-        "Feedback form allows selecting 1–5 stars and entering a comment; submission persists to backend for the session.",
-        "Credit calculation display updates based on timer duration and selected rating and shows the resulting credits earned/spent."
+        "On /live-class, the UI shows the local video preview and a remote video area (when connected).",
+        "The page provides call controls at minimum: Start/Join call, End call, and clear connection status text (e.g., “Waiting for peer…”, “Connecting…”, “Connected”, “Disconnected”).",
+        "The existing session timer and feedback/credits UI remain functional and usable alongside the video UI.",
+        "If camera/microphone permission is denied/unavailable, the UI shows a clear error message and does not crash."
       ],
       "file_operations": [
         {
           "path": "frontend/src/pages/LiveClassPage.tsx",
-          "operation": "create",
-          "description": "Build the Live Class page with a labeled video placeholder region, a start/stop timer, a feedback form (star rating + comment), and a credits calculation panel that updates as duration/rating changes; on submit, call the backend interface to submit feedback for the active sessionId and refresh relevant cached profile data. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useSessionTimer.ts",
-          "operation": "create",
-          "description": "Add a timer hook that supports start/stop/reset and exposes formatted elapsed time for the Live Class UI."
-        },
-        {
-          "path": "frontend/src/utils/creditCalculation.ts",
-          "operation": "create",
-          "description": "Implement a deterministic frontend credit calculation helper based on duration and rating for display purposes (must return the same result for the same inputs)."
-        },
-        {
-          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Register the Live Class route and protect it with RequireAuth (and RequireProfile) so only authenticated users can access it."
+          "description": "Replace the current video placeholder Card content with a composed 1:1 call panel (local+remote video, controls, status/error text) while keeping the existing timer and feedback/credits sections intact and usable. Use existing toast messaging for user-visible errors and state changes."
+        },
+        {
+          "path": "frontend/src/components/liveclass/VideoCallPanel.tsx",
+          "operation": "create",
+          "description": "Create a focused UI component for the video call area: local preview + remote video surface, Start/Join and End buttons, connection status text, and permission/device error display. Use the selected \"camera\" component hook (useCamera) to power the local camera preview; Verify the component's usage instructions before implementing."
+        },
+        {
+          "path": "frontend/src/hooks/useWebRTCPeer.ts",
+          "operation": "create",
+          "description": "Implement a reusable hook that owns the RTCPeerConnection lifecycle (create/close, setLocal/RemoteDescription, handle ICE, attach remote MediaStream to a provided <video> ref, and expose a high-level connection state machine for the UI). Ensure cleanup on unmount and on End call, and handle permission/device failures without throwing unhandled errors."
         }
       ]
     },
     {
-      "id": "REQ-8",
-      "summary": "Apply clean, youth-focused visual design with gradient background, card-based layout, modern typography, and smooth hover/transition animations.",
+      "id": "REQ-12",
+      "summary": "Add a shareable join-link flow using callId in the /live-class URL, including auto-join behavior, copy-to-clipboard, and clear invalid/expired call error state with a start-new-call fallback.",
       "acceptanceCriteria": [
-        "All primary surfaces use a consistent card style (spacing, radius, shadow) and look cohesive across pages.",
-        "Gradient background is present and does not reduce text readability (adequate contrast).",
-        "Interactive components (buttons/cards/nav links) have visible hover/focus states and smooth transitions.",
-        "Layout is responsive and usable on mobile, tablet, and desktop breakpoints."
+        "When a user starts a call, the UI displays a shareable link that includes the callId (e.g., /live-class?callId=...).",
+        "When a user opens /live-class with a callId present, the page automatically enters “join” mode and attempts to connect to the call.",
+        "The user can copy the link via a button and receives a confirmation toast/message that it was copied.",
+        "Invalid/expired callId shows a clear error state and offers a way to start a new call."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/index.css",
+          "path": "frontend/src/pages/LiveClassPage.tsx",
+          "operation": "modify",
+          "description": "Read callId from the URL on load (and persist it for refresh resilience) to decide Start vs Join mode. After creating a call, render the shareable join link and a Copy Link button with toast confirmation. If join fails due to invalid/expired callId, show a clear inline error state plus a Start New Call action that clears the invalid callId from the persisted state."
+        },
+        {
+          "path": "frontend/src/components/liveclass/JoinLinkBox.tsx",
           "operation": "create",
-          "description": "Create the missing src-level CSS entry imported by main.tsx; compose Tailwind base and include project-wide utility classes for gradient background overlays, consistent card surfaces, and transitions (while keeping text readable)."
+          "description": "Create a small composed UI block that renders the current callId, the fully-qualified shareable /live-class?callId=... link, and a Copy button (clipboard + toast). Keep it reusable within the Live Class page and avoid modifying immutable UI component files by composing existing UI primitives."
         },
         {
-          "path": "frontend/index.css",
+          "path": "frontend/src/utils/urlParams.ts",
           "operation": "modify",
-          "description": "Adjust global CSS variables and base styling as needed to support the blue+purple youth-focused theme across light/dark modes, while preserving the existing Tailwind/shadcn token approach."
-        },
-        {
-          "path": "frontend/src/components/layout/AppShell.tsx",
-          "operation": "modify",
-          "description": "Apply the soft gradient background (including the generated background image at frontend/public/assets/generated/skillsync-bg.dim_1920x1080.png) and consistent card-based layout spacing across all pages."
-        },
-        {
-          "path": "frontend/src/components/layout/Navbar.tsx",
-          "operation": "modify",
-          "description": "Ensure nav items/buttons include clear hover/focus states and smooth transitions, and that the layout remains responsive across breakpoints; use shadcn-ui components where appropriate. Verify the component's usage instructions before implementing."
+          "description": "Extend URL param utilities (without breaking existing behavior) to support the Live Class join-link flow: retrieving a persisted callId from URL or sessionStorage and providing a small helper to persist/clear callId used by /live-class."
         }
       ]
     },
     {
-      "id": "REQ-9",
-      "summary": "Add dark mode with a navbar theme toggle that persists preference and updates gradients/background and surface colors.",
+      "id": "REQ-13",
+      "summary": "Integrate signaling data-flow using existing actor + React Query patterns (polling-based), without modifying immutable hook files, and make connection state resilient across refreshes/navigation when callId is present.",
       "acceptanceCriteria": [
-        "Theme toggle is accessible from the navbar (or equivalent global location).",
-        "Theme choice persists across refreshes (e.g., local storage) and applies on initial load.",
-        "Dark mode maintains readability and consistent styling for cards, text, and controls."
+        "Frontend uses the existing backend actor (via existing app patterns) to create/join calls and exchange signaling messages.",
+        "Signaling receive is implemented using polling (React Query refetch interval or equivalent), since real-time sockets are not available.",
+        "Refreshing the page in a call with a valid callId keeps the page in join mode and attempts to reconnect (while clearly indicating the current state).",
+        "No changes are requested to any paths listed in frontend.immutablePaths."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/hooks/useTheme.ts",
+          "path": "frontend/src/hooks/useCallSignaling.ts",
           "operation": "create",
-          "description": "Implement a lightweight theme manager that toggles the document class (dark/light) and persists the preference in localStorage; initialize theme on app load before rendering theme-sensitive UI."
+          "description": "Add new React Query hooks for call signaling using the existing actor pattern (via useActor): create/start call, join call by callId, send signaling messages (offer/answer/ICE), poll/fetch pending signaling messages on an interval, and end call. Ensure polling is enabled only when in an active call flow and actor is available, and surface backend authorization/validation errors to the caller for UI display."
         },
         {
-          "path": "frontend/src/components/theme/ThemeToggle.tsx",
-          "operation": "create",
-          "description": "Create a theme toggle control for the navbar (e.g., icon button) wired to the theme hook; use shadcn-ui Button/DropdownMenu styling conventions if applicable. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/layout/Navbar.tsx",
+          "path": "frontend/src/pages/LiveClassPage.tsx",
           "operation": "modify",
-          "description": "Add the theme toggle to the navbar in a globally discoverable location and ensure it works in both desktop and mobile navbar variants."
+          "description": "Wire the new signaling hooks into the Live Class call panel: use polling to receive signaling messages and drive the WebRTC peer hook (apply remote offer/answer, add remote ICE candidates). Persist callId (via urlParams helper) so refresh keeps join mode and automatically attempts to reconnect while showing clear state text (Waiting/Connecting/Connected/Disconnected)."
         },
         {
-          "path": "frontend/index.css",
+          "path": "frontend/src/backend.d.ts",
           "operation": "modify",
-          "description": "Update light/dark token values and any background/overlay styling so the gradient/background and card colors adapt correctly while maintaining contrast and readability."
+          "description": "Update the frontend backend interface type definitions to include the new callId-based signaling capabilities required by the Live Class WebRTC flow (create/join, send signaling messages, poll pending messages, end/cleanup), so new React Query hooks can call them in a type-safe way."
         }
       ]
     }
